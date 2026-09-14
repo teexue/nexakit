@@ -19,9 +19,6 @@ type ToolRegistry interface {
 	Definitions(names []string) ([]provider.ToolDefinition, error)
 }
 
-// ctxKeyWorkDir is the unexported context key for the working directory.
-type ctxKeyWorkDir struct{}
-
 // ctxKeyParentEventChan is the unexported context key for the parent event channel.
 type ctxKeyParentEventChan struct{}
 
@@ -99,16 +96,14 @@ type Config struct {
 }
 
 // GetWorkDir returns the working directory from context, or empty string.
+// It delegates to tool, which owns the run-scoped tool context keys.
 func GetWorkDir(ctx context.Context) string {
-	if v, ok := ctx.Value(ctxKeyWorkDir{}).(string); ok {
-		return v
-	}
-	return ""
+	return tool.GetWorkDir(ctx)
 }
 
 // WithWorkDir returns a context with the working directory set.
 func WithWorkDir(ctx context.Context, dir string) context.Context {
-	return context.WithValue(ctx, ctxKeyWorkDir{}, dir)
+	return tool.WithWorkDir(ctx, dir)
 }
 
 // GetParentEventChan returns the parent event channel from context, or nil.

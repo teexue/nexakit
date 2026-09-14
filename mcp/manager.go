@@ -122,8 +122,8 @@ func (m *Manager) ToolNames() []string {
 	return names
 }
 
-// MCPServerStatus represents the status of an MCP server.
-type MCPServerStatus struct {
+// ServerStatus represents the status of an MCP server.
+type ServerStatus struct {
 	Name      string   `json:"name"`
 	Type      string   `json:"type"`
 	Connected bool     `json:"connected"`
@@ -131,14 +131,14 @@ type MCPServerStatus struct {
 }
 
 // Status returns the status of all configured MCP servers.
-func (m *Manager) Status() []MCPServerStatus {
+func (m *Manager) Status() []ServerStatus {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	var result []MCPServerStatus
+	var result []ServerStatus
 	for _, cfg := range m.servers {
 		client, connected := m.clients[cfg.Name]
-		result = append(result, MCPServerStatus{
+		result = append(result, ServerStatus{
 			Name:      cfg.Name,
 			Type:      cfg.Type,
 			Connected: connected,

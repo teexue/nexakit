@@ -33,7 +33,7 @@ func convertOllamaMessages(msgs []Message) []ollamaMessage {
 			// image parts go to images. HTTP image URLs are unsupported (skipped).
 			var textParts []string
 			for _, p := range m.ContentParts {
-				if p.Type == "text" && p.Text != "" {
+				if p.Type == ContentPartText && p.Text != "" {
 					textParts = append(textParts, p.Text)
 				}
 			}
@@ -64,7 +64,7 @@ func extractOllamaImages(parts []ContentPart) []string {
 	}
 	var images []string
 	for _, p := range parts {
-		if p.Type != "image_url" || p.ImageURL == nil {
+		if p.Type != ContentPartImage || p.ImageURL == nil {
 			continue
 		}
 		if b64, ok := dataURLToBase64(p.ImageURL.URL); ok {

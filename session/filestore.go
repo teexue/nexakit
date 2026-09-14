@@ -132,7 +132,7 @@ func (fs *FileStore) Load(id string) (*Session, error) {
 }
 
 // List returns metadata for all stored sessions, ordered by UpdatedAt descending.
-func (fs *FileStore) List() ([]SessionMeta, error) {
+func (fs *FileStore) List() ([]Meta, error) {
 	fs.mu.RLock()
 	defer fs.mu.RUnlock()
 
@@ -141,7 +141,7 @@ func (fs *FileStore) List() ([]SessionMeta, error) {
 		return nil, fmt.Errorf("read session dir: %w", err)
 	}
 
-	var metas []SessionMeta
+	var metas []Meta
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
 			continue
@@ -170,7 +170,7 @@ func (fs *FileStore) List() ([]SessionMeta, error) {
 		if title == "" {
 			title = titleFromMessages(sf.Messages)
 		}
-		metas = append(metas, SessionMeta{
+		metas = append(metas, Meta{
 			ID:        sf.ID,
 			Agent:     sf.Agent,
 			Title:     title,

@@ -1,3 +1,5 @@
+// Package registry registers tools by name and resolves their definitions for
+// the LLM. RegisterBuiltin wires the built-in tools.
 package registry
 
 import (

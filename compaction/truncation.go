@@ -15,11 +15,11 @@ import (
 // discarded entirely, and the head is preserved so the prompt prefix stays
 // stable for provider-side prompt caching.
 type TruncationCompactor struct {
-	tokenLimit    int
-	maxMessages   int
-	keepRecent    int
-	keepHead      int
-	currentTokens int
+	usageBase
+	tokenLimit  int
+	maxMessages int
+	keepRecent  int
+	keepHead    int
 	// targetTokens is the post-compaction budget. fits() compresses down to
 	// this level instead of tokenLimit, leaving headroom so compaction does
 	// not re-fire on the next turn. 0 falls back to tokenLimit.
@@ -46,15 +46,6 @@ func NewTruncationCompactorWithHead(tokenLimit, maxMessages, keepRecent, keepHea
 		keepRecent:  keepRecent,
 		keepHead:    keepHead,
 	}
-}
-
-// currentUsage returns the known token usage when available, falling back to
-// the estimate.
-func (c *TruncationCompactor) currentUsage(messages []provider.Message) int {
-	if c.currentTokens > 0 {
-		return c.currentTokens
-	}
-	return EstimateTokens(messages)
 }
 
 // trialTokens estimates the token usage of a candidate message list. When a

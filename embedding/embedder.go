@@ -90,7 +90,7 @@ func (c Config) Normalize() Config {
 		c.Backend = BackendOpenAI
 	}
 	if c.Backend == BackendOllama && c.BaseURL == "" {
-		c.BaseURL = "http://127.0.0.1:11434"
+		c.BaseURL = defaultOllamaBaseURL
 	}
 	return c
 }

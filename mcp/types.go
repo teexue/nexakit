@@ -6,6 +6,18 @@ import "encoding/json"
 
 const jsonrpcVersion = "2.0"
 
+// MCP protocol version sent during the initialize handshake.
+const mcpProtocolVersion = "2024-11-05"
+
+// MCP JSON-RPC method names, shared by the stdio and SSE clients so the wire
+// strings are defined once.
+const (
+	methodInitialize  = "initialize"
+	methodInitialized = "notifications/initialized"
+	methodToolsList   = "tools/list"
+	methodToolsCall   = "tools/call"
+)
+
 // Request is a JSON-RPC 2.0 request.
 type Request struct {
 	JSONRPC string          `json:"jsonrpc"`

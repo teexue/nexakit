@@ -125,7 +125,7 @@ var builtInVendors = []Vendor{
 		Name: "ollama", DisplayName: "Ollama (local)",
 		DefaultModel: "llama3.1", APIKeyEnv: "",
 		APIStyle: StyleOllama, SupportedStyles: []APIStyle{StyleOllama},
-		OpenAIBaseURL: "http://localhost:11434",
+		OpenAIBaseURL: defaultOllamaBaseURL,
 		Vision:        true,
 	},
 	{

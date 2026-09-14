@@ -57,7 +57,7 @@ func resolveCompactionSettings(comp *agent.CompactionConfig, defaultModel string
 	s.keepRecent = comp.KeepRecent
 	s.keepHead = comp.KeepHead
 	s.maxMessages = comp.MaxMessages
-	s.strategy = compaction.Strategy(comp.Strategy)
+	s.strategy = comp.Strategy
 	if comp.SummaryModel != "" {
 		s.summaryModel = comp.SummaryModel
 	}
@@ -130,26 +130,4 @@ func compactIfNeeded(ctx context.Context, cfg Config, out chan<- event.Event, hi
 		"current_tokens", currentTokens,
 		"est_tokens", compaction.EstimateTokens(result.Compacted),
 	)
-}
-
-// compactMessages applies the default truncation strategy and returns the
-// compacted message list, or nil when no compaction is needed. Used by tests.
-func compactMessages(ctx context.Context, messages []provider.Message, tokenLimit, maxMessages, keepRecent int) []provider.Message {
-	cmp := compaction.NewCompactor(compaction.Config{
-		Strategy:    compaction.StrategyTruncation,
-		TokenLimit:  tokenLimit,
-		MaxMessages: maxMessages,
-		KeepRecent:  keepRecent,
-	})
-	result, err := cmp.Compact(ctx, messages)
-	if err != nil || result == nil {
-		return nil
-	}
-	return result.Compacted
-}
-
-// compactionTokenLimit derives the soft compaction threshold from a model
-// window with default trigger ratio, mirroring compactIfNeeded.
-func compactionTokenLimit(window, reserve int, _ float64) int {
-	return compaction.ResolveTokenLimit(window, reserve, 0)
 }

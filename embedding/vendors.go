@@ -53,7 +53,7 @@ var vendors = []Vendor{
 		Name:         "ollama",
 		DisplayName:  "Ollama",
 		Backend:      BackendOllama,
-		BaseURL:      "http://127.0.0.1:11434",
+		BaseURL:      defaultOllamaBaseURL,
 		DefaultModel: "nomic-embed-text",
 		Models:       []string{"nomic-embed-text", "mxbai-embed-large", "bge-m3"},
 	},

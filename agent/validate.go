@@ -1,6 +1,10 @@
 package agent
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/teexue/nexakit/compaction"
+)
 
 func (a *Agent) validate() error {
 	if err := a.validateCore(); err != nil {
@@ -45,18 +49,18 @@ func (a *Agent) validateCore() error {
 
 func (a *Agent) validateToolExecution() error {
 	if a.ToolExecution == nil {
-		a.ToolExecution = &ToolExecution{Mode: "parallel", MaxParallel: 4}
+		a.ToolExecution = &ToolExecution{Mode: ToolExecParallel, MaxParallel: defaultMaxParallel}
 		return nil
 	}
 	switch a.ToolExecution.Mode {
-	case "", "parallel":
-		a.ToolExecution.Mode = "parallel"
-	case "serial":
+	case "", ToolExecParallel:
+		a.ToolExecution.Mode = ToolExecParallel
+	case ToolExecSerial:
 	default:
-		return fmt.Errorf("tool_execution.mode must be 'parallel' or 'serial', got %q", a.ToolExecution.Mode)
+		return fmt.Errorf("tool_execution.mode must be %q or %q, got %q", ToolExecParallel, ToolExecSerial, a.ToolExecution.Mode)
 	}
 	if a.ToolExecution.MaxParallel <= 0 {
-		a.ToolExecution.MaxParallel = 4
+		a.ToolExecution.MaxParallel = defaultMaxParallel
 	}
 	return nil
 }
@@ -87,11 +91,14 @@ func (a *Agent) validateCompaction() error {
 		return nil
 	}
 	switch a.Compaction.Strategy {
-	case "", "cascade":
-		a.Compaction.Strategy = "cascade"
-	case "truncation", "sliding_window", "summarize":
+	case "":
+		a.Compaction.Strategy = compaction.StrategyCascade
+	case compaction.StrategyCascade, compaction.StrategyTruncation,
+		compaction.StrategySliding, compaction.StrategySummarize:
 	default:
-		return fmt.Errorf("compaction.strategy must be 'cascade', 'truncation', 'sliding_window' or 'summarize', got %q", a.Compaction.Strategy)
+		return fmt.Errorf("compaction.strategy must be one of %q, %q, %q, %q, got %q",
+			compaction.StrategyCascade, compaction.StrategyTruncation,
+			compaction.StrategySliding, compaction.StrategySummarize, a.Compaction.Strategy)
 	}
 	if a.Compaction.KeepRecent <= 0 {
 		a.Compaction.KeepRecent = 20

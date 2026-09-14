@@ -64,7 +64,7 @@ func seedMessages(cfg Config) {
 			Content: cfg.Prompt,
 		}
 		if len(cfg.Images) > 0 {
-			msg.ContentParts = append([]provider.ContentPart{{Type: "text", Text: cfg.Prompt}}, cfg.Images...)
+			msg.ContentParts = append([]provider.ContentPart{{Type: provider.ContentPartText, Text: cfg.Prompt}}, cfg.Images...)
 		}
 		cfg.Session.AddMessages(msg)
 	}

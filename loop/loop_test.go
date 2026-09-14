@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/teexue/nexakit/agent"
-	"github.com/teexue/nexakit/builtin"
 	"github.com/teexue/nexakit/event"
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/provider"
@@ -38,7 +37,7 @@ func (echoTool) Execute(_ context.Context, input json.RawMessage) (tool.Result, 
 
 func TestRunWithMockProvider(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{
@@ -94,7 +93,7 @@ func TestRunWithMockProvider(t *testing.T) {
 
 func TestRunUnknownTool(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{
@@ -141,7 +140,7 @@ func TestRunUnknownTool(t *testing.T) {
 
 func TestRunSerialMode(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{
@@ -191,7 +190,7 @@ func TestRunSerialMode(t *testing.T) {
 
 func TestRunMaxTurnsExceeded(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{
@@ -230,7 +229,7 @@ func TestRunMaxTurnsExceeded(t *testing.T) {
 
 func TestRunMaxTurnsUnlimitedContinues(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{
@@ -280,7 +279,7 @@ func TestRunMaxTurnsUnlimitedContinues(t *testing.T) {
 
 func TestRunTextOnlyResponse(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{
@@ -322,7 +321,7 @@ func TestRunTextOnlyResponse(t *testing.T) {
 
 func TestRunReasoningDeltaEvents(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{

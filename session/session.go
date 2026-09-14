@@ -1,3 +1,5 @@
+// Package session provides a thread-safe conversation session (AddMessages /
+// GetMessages / Clear) and a JSON-file store for persistence.
 package session
 
 import (

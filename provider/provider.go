@@ -32,9 +32,22 @@ type ToolCall struct {
 
 // ContentPart represents a multimodal content block (text or image).
 type ContentPart struct {
-	Type     string    `json:"type"`                // "text" | "image_url"
-	Text     string    `json:"text,omitempty"`      // for type="text"
-	ImageURL *ImageURL `json:"image_url,omitempty"` // for type="image_url"
+	Type     string    `json:"type"`                // ContentPartText | ContentPartImage
+	Text     string    `json:"text,omitempty"`      // for type=ContentPartText
+	ImageURL *ImageURL `json:"image_url,omitempty"` // for type=ContentPartImage
+}
+
+const (
+	// ContentPartText is the ContentPart.Type for a plain text block.
+	ContentPartText = "text"
+	// ContentPartImage is the ContentPart.Type for an image_url block.
+	ContentPartImage = "image_url"
+)
+
+// IsImagePart reports whether p carries a usable image reference. Providers and
+// the loop share this predicate so the block-type string is defined once.
+func IsImagePart(p ContentPart) bool {
+	return p.Type == ContentPartImage && p.ImageURL != nil && p.ImageURL.URL != ""
 }
 
 // ImageURL holds an image reference (data URL or HTTP URL).
@@ -170,11 +183,6 @@ type ModelLister interface {
 // the UI can surface context length, family, parameter size, etc.
 type ModelDetailer interface {
 	ShowModel(ctx context.Context, model string) (ModelDetail, error)
-}
-
-// Capabler exposes a provider's advertised capabilities.
-type Capabler interface {
-	Capabilities() Capabilities
 }
 
 // ContextResolver resolves the effective context window for a model. A

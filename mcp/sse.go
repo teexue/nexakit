@@ -70,24 +70,8 @@ func (c *SSEClient) Connect(ctx context.Context) error {
 	// Start SSE listener.
 	go c.listenSSE(ctx)
 
-	// Send initialize request.
-	initParams, _ := json.Marshal(InitializeParams{
-		ProtocolVersion: "2024-11-05",
-		Capabilities:    ClientCapabilities{Tools: &ToolsCapability{}},
-		ClientInfo:      handshakeIdentity(c.clientName, c.clientVersion),
-	})
-
-	resp, err := c.sendRequest(ctx, "initialize", initParams)
-	if err != nil {
-		return fmt.Errorf("initialize: %w", err)
-	}
-	if resp.Error != nil {
-		return fmt.Errorf("initialize error: %s", resp.Error.Message)
-	}
-
-	// Send initialized notification.
-	if err := c.sendNotification(ctx, "notifications/initialized", nil); err != nil {
-		return fmt.Errorf("initialized notification: %w", err)
+	if err := performHandshake(ctx, c, handshakeIdentity(c.clientName, c.clientVersion)); err != nil {
+		return err
 	}
 
 	c.logger.Info("log.mcp.sse.connected", "name", c.name)
@@ -96,38 +80,12 @@ func (c *SSEClient) Connect(ctx context.Context) error {
 
 // ListTools returns the tools provided by the server.
 func (c *SSEClient) ListTools(ctx context.Context) ([]ToolDefinition, error) {
-	resp, err := c.sendRequest(ctx, "tools/list", nil)
-	if err != nil {
-		return nil, fmt.Errorf("tools/list: %w", err)
-	}
-	if resp.Error != nil {
-		return nil, fmt.Errorf("tools/list error: %s", resp.Error.Message)
-	}
-
-	var result ListToolsResult
-	if err := json.Unmarshal(resp.Result, &result); err != nil {
-		return nil, fmt.Errorf("unmarshal tools/list result: %w", err)
-	}
-	return result.Tools, nil
+	return listTools(ctx, c)
 }
 
 // CallTool invokes a tool on the server.
 func (c *SSEClient) CallTool(ctx context.Context, name string, args map[string]any) (*CallToolResult, error) {
-	params, _ := json.Marshal(CallToolParams{Name: name, Arguments: args})
-
-	resp, err := c.sendRequest(ctx, "tools/call", params)
-	if err != nil {
-		return nil, fmt.Errorf("tools/call %s: %w", name, err)
-	}
-	if resp.Error != nil {
-		return nil, fmt.Errorf("tools/call %s error: %s", name, resp.Error.Message)
-	}
-
-	var result CallToolResult
-	if err := json.Unmarshal(resp.Result, &result); err != nil {
-		return nil, fmt.Errorf("unmarshal tools/call result: %w", err)
-	}
-	return &result, nil
+	return callTool(ctx, c, name, args)
 }
 
 // Close shuts down the connection.

@@ -268,8 +268,8 @@ func MergeModelWindows(dst, src map[string]int) map[string]int {
 	return out
 }
 
-// ProviderInfo returns summary information about a provider (without secrets).
-type ProviderInfo struct {
+// Info returns summary information about a provider (without secrets).
+type Info struct {
 	Name          string         `json:"name"`
 	APIStyle      APIStyle       `json:"api_style"`
 	AuthStyle     AuthStyle      `json:"auth_style,omitempty"`
@@ -284,9 +284,9 @@ type ProviderInfo struct {
 	ContextWindow int            `json:"context_window,omitempty"` // default_model's saved window
 }
 
-// Entries returns all configured providers as ProviderInfo (without API keys).
-func (c *Catalog) Entries() []ProviderInfo {
-	infos := make([]ProviderInfo, 0, len(c.entries))
+// Entries returns all configured providers as Info (without API keys).
+func (c *Catalog) Entries() []Info {
+	infos := make([]Info, 0, len(c.entries))
 	for name, entry := range c.entries {
 		vendor, hasVendor := LookupVendor(name)
 		modelsPath := entry.ModelsPath
@@ -316,7 +316,7 @@ func (c *Catalog) Entries() []ProviderInfo {
 				authStyle = AuthBearer
 			}
 		}
-		infos = append(infos, ProviderInfo{
+		infos = append(infos, Info{
 			Name:          name,
 			APIStyle:      entry.APIStyle,
 			AuthStyle:     authStyle,

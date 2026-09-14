@@ -41,13 +41,13 @@ const summarizeSystemPrompt = `你是对话压缩器。把用户与 AI 助手的
 // message is reused and only the messages appended since are sent to the model.
 // On provider failure it falls back to truncation so the loop never breaks.
 type SummarizingCompactor struct {
-	provider      provider.Provider
-	model         string
-	tokenLimit    int
-	maxOutput     int
-	keepRecent    int
-	keepHead      int
-	currentTokens int
+	usageBase
+	provider   provider.Provider
+	model      string
+	tokenLimit int
+	maxOutput  int
+	keepRecent int
+	keepHead   int
 }
 
 // NewSummarizingCompactor creates a SummarizingCompactor.
@@ -66,15 +66,6 @@ func NewSummarizingCompactor(cfg SummarizeConfig) *SummarizingCompactor {
 		keepRecent: cfg.KeepRecent,
 		keepHead:   cfg.KeepHead,
 	}
-}
-
-// currentUsage returns the known token usage when available, falling back to
-// the estimate.
-func (c *SummarizingCompactor) currentUsage(messages []provider.Message) int {
-	if c.currentTokens > 0 {
-		return c.currentTokens
-	}
-	return EstimateTokens(messages)
 }
 
 // Compact summarizes older turns when the estimated token count exceeds the

@@ -30,6 +30,12 @@ type OllamaEmbedder struct {
 	dims int
 }
 
+const (
+	// defaultOllamaBaseURL is the local Ollama host used when a config leaves
+	// BaseURL empty. Defined once so the literal is not repeated.
+	defaultOllamaBaseURL = "http://127.0.0.1:11434"
+)
+
 // NewOllama creates an Ollama embedder.
 func NewOllama(cfg OllamaConfig) (*OllamaEmbedder, error) {
 	if cfg.Model == "" {
@@ -37,7 +43,7 @@ func NewOllama(cfg OllamaConfig) (*OllamaEmbedder, error) {
 	}
 	base := strings.TrimRight(cfg.BaseURL, "/")
 	if base == "" {
-		base = "http://127.0.0.1:11434"
+		base = defaultOllamaBaseURL
 	}
 	client := cfg.Client
 	if client == nil {

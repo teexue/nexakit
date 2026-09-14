@@ -32,7 +32,7 @@ func DropImagesBefore(msgs []Message, fromIndex int) []Message {
 func hasImageBefore(msgs []Message, fromIndex int) bool {
 	for i := 0; i < fromIndex && i < len(msgs); i++ {
 		for _, p := range msgs[i].ContentParts {
-			if isDataImagePart(p) {
+			if IsImagePart(p) {
 				return true
 			}
 		}
@@ -40,17 +40,13 @@ func hasImageBefore(msgs []Message, fromIndex int) bool {
 	return false
 }
 
-func isDataImagePart(p ContentPart) bool {
-	return p.Type == "image_url" && p.ImageURL != nil && p.ImageURL.URL != ""
-}
-
 func stubImageParts(parts []ContentPart) ([]ContentPart, bool) {
 	changed := false
 	out := make([]ContentPart, len(parts))
 	for i, p := range parts {
-		if isDataImagePart(p) {
+		if IsImagePart(p) {
 			out[i] = ContentPart{
-				Type: "text",
+				Type: ContentPartText,
 				Text: "[image from earlier turn omitted]",
 			}
 			changed = true

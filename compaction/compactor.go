@@ -47,6 +47,23 @@ type Compactor interface {
 	Compact(ctx context.Context, messages []provider.Message) (*Result, error)
 }
 
+// usageBase carries the shared "known token usage, else estimate" behavior.
+// Embedding it lets the concrete compactors express currentUsage once instead
+// of redefining the field and method in each strategy.
+type usageBase struct {
+	currentTokens int
+}
+
+// currentUsage returns the known token usage when available, falling back to
+// the estimate. A known usage (e.g. the provider's real input_tokens) is more
+// accurate than a raw estimate for CJK-heavy histories.
+func (b usageBase) currentUsage(messages []provider.Message) int {
+	if b.currentTokens > 0 {
+		return b.currentTokens
+	}
+	return EstimateTokens(messages)
+}
+
 // Config configures compaction behavior.
 type Config struct {
 	Strategy Strategy
@@ -99,13 +116,9 @@ const (
 	// summaryBudgetCap caps the tokens reserved for a compaction summary
 	// output (and the next completion), mirroring Claude Code's ~20K cap.
 	summaryBudgetCap = 20000
-	// Cascade pressure thresholds, expressed as fractions of the context
-	// window. Trim verbose tool results once usage passes trimRatio, snip
-	// (archive) oldest messages past snipRatio, and full-collapse past the
-	// trigger line.
-	trimRatio     = 0.6
-	snipRatio     = 0.75
-	collapseRatio = 0.9
+	// trimRatio is the context-pressure fraction at which the cascade's first
+	// tier starts shrinking verbose tool results in place.
+	trimRatio = 0.6
 )
 
 // Defaults returns a Config with default values applied.
@@ -160,14 +173,9 @@ func NewCompactor(cfg Config) Compactor {
 }
 
 // NeedsCompaction returns true if the message list exceeds a message-count threshold.
-// Prefer NeedsCompactionByTokens for production use.
+// Prefer NeedsCompactionByTokensCount for production use.
 func NeedsCompaction(messages []provider.Message, maxMessages int) bool {
 	return maxMessages > 0 && len(messages) > maxMessages
-}
-
-// NeedsCompactionByTokens returns true when estimated tokens exceed the soft limit.
-func NeedsCompactionByTokens(messages []provider.Message, tokenLimit int) bool {
-	return tokenLimit > 0 && EstimateTokens(messages) > tokenLimit
 }
 
 // NeedsCompactionByTokensCount returns true when the given token count exceeds

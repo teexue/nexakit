@@ -8,9 +8,9 @@ import (
 // ErrNotFound is returned by Store.Load and Store.Delete when the session does not exist.
 var ErrNotFound = errors.New("session not found")
 
-// SessionMeta is the lightweight metadata returned by Store.List.
+// Meta is the lightweight metadata returned by Store.List.
 // It omits the full message payload for efficiency.
-type SessionMeta struct {
+type Meta struct {
 	ID        string            `json:"id"`
 	UserID    string            `json:"user_id,omitempty"`
 	Agent     string            `json:"agent"`
@@ -33,7 +33,7 @@ type Store interface {
 	Load(id string) (*Session, error)
 
 	// List returns metadata for all stored sessions, ordered by UpdatedAt descending.
-	List() ([]SessionMeta, error)
+	List() ([]Meta, error)
 
 	// Delete removes a session by ID. Returns ErrNotFound if not found.
 	Delete(id string) error

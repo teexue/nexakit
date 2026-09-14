@@ -1,5 +1,7 @@
 package loop
 
+import "github.com/teexue/nexakit/tool"
+
 // SubagentLimits are process-wide nested-run caps, not fields on Agent.
 type SubagentLimits struct {
 	Enabled  bool
@@ -37,5 +39,5 @@ func NormalizeSubagentLimits(l SubagentLimits) SubagentLimits {
 // IsDelegateTool reports tools that spawn nested runs. They must not share the
 // regular tool parallel semaphore — subagent concurrency is capped separately.
 func IsDelegateTool(name string) bool {
-	return name == "delegate_task"
+	return name == tool.DelegateTaskName
 }

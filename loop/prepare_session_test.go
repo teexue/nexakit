@@ -46,7 +46,7 @@ func (s *cloneStore) Load(id string) (*session.Session, error) {
 	return cloneSession(sess), nil
 }
 
-func (s *cloneStore) List() ([]session.SessionMeta, error) { return nil, nil }
+func (s *cloneStore) List() ([]session.Meta, error) { return nil, nil }
 
 func (s *cloneStore) Delete(id string) error {
 	s.mu.Lock()

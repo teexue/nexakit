@@ -10,7 +10,6 @@ import (
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/permission"
 	"github.com/teexue/nexakit/provider"
-	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/session"
 	"github.com/teexue/nexakit/tool"
 )
@@ -28,9 +27,37 @@ func (t *testTool) Execute(_ context.Context, _ json.RawMessage) (tool.Result, e
 	return tool.Result{Output: json.RawMessage(`"ok"`)}, nil
 }
 
+// stubRegistry is a tiny loop.ToolRegistry implementation. The real registry
+// package imports subagent (to register the delegate_task tool), so using it
+// here would create an import cycle; these tests only need Get/Definitions.
+type stubRegistry struct {
+	tools map[string]tool.Tool
+}
+
+func newStubRegistry() *stubRegistry {
+	return &stubRegistry{tools: map[string]tool.Tool{}}
+}
+
+func (r *stubRegistry) register(t tool.Tool) { r.tools[t.Name()] = t }
+
+func (r *stubRegistry) Get(name string) (tool.Tool, bool) {
+	t, ok := r.tools[name]
+	return t, ok
+}
+
+func (r *stubRegistry) Definitions(names []string) ([]provider.ToolDefinition, error) {
+	defs := make([]provider.ToolDefinition, 0, len(names))
+	for _, n := range names {
+		if t, ok := r.tools[n]; ok {
+			defs = append(defs, provider.ToolDefinition{Name: t.Name(), Description: t.Description(), Parameters: t.InputSchema()})
+		}
+	}
+	return defs, nil
+}
+
 func setupDeps() Deps {
-	reg := registry.New()
-	reg.MustRegister(&testTool{name: "echo"})
+	reg := newStubRegistry()
+	reg.register(&testTool{name: "echo"})
 
 	return Deps{
 		AgentsDir: "/tmp/nonexistent-agents",
@@ -233,8 +260,8 @@ func (m *memStore) Load(id string) (*session.Session, error) {
 	return sess, nil
 }
 
-func (m *memStore) List() ([]session.SessionMeta, error) { return nil, nil }
-func (m *memStore) Delete(id string) error               { return nil }
+func (m *memStore) List() ([]session.Meta, error) { return nil, nil }
+func (m *memStore) Delete(id string) error        { return nil }
 
 func TestRun_PersistsChildSession(t *testing.T) {
 	store := &memStore{}
@@ -265,11 +292,8 @@ func TestRun_PersistsChildSession(t *testing.T) {
 
 func TestLoadSubAgent_StripsDelegateAtMaxDepth(t *testing.T) {
 	deps := setupDeps()
-	reg, ok := deps.Registry.(*registry.Registry)
-	if !ok {
-		t.Fatal("expected *registry.Registry")
-	}
-	reg.MustRegister(&testTool{name: ToolName})
+	reg := deps.Registry.(*stubRegistry)
+	reg.register(&testTool{name: ToolName})
 	deps.ParentAgent = &agent.Agent{Name: "p", Tools: []string{"echo"}}
 	a, err := loadSubAgent(deps, Config{Depth: 1}, loop.SubagentLimits{
 		Enabled: true, MaxTurns: 5, MaxDepth: 1,
@@ -286,11 +310,8 @@ func TestLoadSubAgent_StripsDelegateAtMaxDepth(t *testing.T) {
 
 func TestLoadSubAgent_KeepsDelegateBelowMaxDepth(t *testing.T) {
 	deps := setupDeps()
-	reg, ok := deps.Registry.(*registry.Registry)
-	if !ok {
-		t.Fatal("expected *registry.Registry")
-	}
-	reg.MustRegister(&testTool{name: ToolName})
+	reg := deps.Registry.(*stubRegistry)
+	reg.register(&testTool{name: ToolName})
 	deps.ParentAgent = &agent.Agent{Name: "p", Tools: []string{"echo"}}
 	a, err := loadSubAgent(deps, Config{Depth: 1}, loop.SubagentLimits{
 		Enabled: true, MaxTurns: 5, MaxDepth: 2,

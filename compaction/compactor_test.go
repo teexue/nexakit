@@ -19,13 +19,13 @@ func TestNeedsCompaction(t *testing.T) {
 	assert.True(t, NeedsCompaction(msgs, 3))
 }
 
-func TestNeedsCompactionByTokens(t *testing.T) {
+func TestEstimateTokensExceedsLimit(t *testing.T) {
 	msgs := []provider.Message{{Role: provider.RoleUser, Content: strings.Repeat("字", 300)}}
 	est := EstimateTokens(msgs)
 	require.Greater(t, est, 0)
-	assert.False(t, NeedsCompactionByTokens(msgs, 0))
-	assert.False(t, NeedsCompactionByTokens(msgs, est+10))
-	assert.True(t, NeedsCompactionByTokens(msgs, est-1))
+	assert.False(t, NeedsCompactionByTokensCount(est, 0))
+	assert.False(t, NeedsCompactionByTokensCount(est, est+10))
+	assert.True(t, NeedsCompactionByTokensCount(est, est-1))
 }
 
 func TestResolveTokenLimit(t *testing.T) {

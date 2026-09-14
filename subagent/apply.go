@@ -3,10 +3,12 @@ package subagent
 import (
 	"github.com/teexue/nexakit/agent"
 	"github.com/teexue/nexakit/permission"
+	"github.com/teexue/nexakit/tool"
 )
 
-// ToolName is the loop tool used to start a nested run.
-const ToolName = "delegate_task"
+// ToolName is the loop tool used to start a nested run. It aliases the
+// canonical tool name so the string is defined once.
+const ToolName = tool.DelegateTaskName
 
 // ApplyToAgent adds or strips ToolName. enabled is false when globally off
 // or when this agent has already reached MaxDepth.

@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/teexue/nexakit/agent"
-	"github.com/teexue/nexakit/builtin"
 	"github.com/teexue/nexakit/event"
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/permission"
@@ -18,7 +17,7 @@ import (
 
 func TestRunApproval_Approved(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{
@@ -90,7 +89,7 @@ func TestRunApproval_Approved(t *testing.T) {
 
 func TestRunApproval_Denied(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{

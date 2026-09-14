@@ -7,14 +7,14 @@ import (
 
 func TestTruncateToolOutput_Short(t *testing.T) {
 	s := "small output"
-	if got := truncateToolOutput(s); got != s {
+	if got := truncateToolOutputBudget(s, maxToolResultBytes); got != s {
 		t.Fatalf("short output should pass through, got %q", got)
 	}
 }
 
 func TestTruncateToolOutput_KeepsHeadAndTail(t *testing.T) {
 	big := strings.Repeat("A", 20*1024) + "END-MARKER" + strings.Repeat("B", 20*1024)
-	got := truncateToolOutput(big)
+	got := truncateToolOutputBudget(big, maxToolResultBytes)
 	if len(got) > maxToolResultBytes {
 		t.Fatalf("truncated output %d bytes exceeds cap %d", len(got), maxToolResultBytes)
 	}
@@ -31,7 +31,7 @@ func TestTruncateToolOutput_KeepsHeadAndTail(t *testing.T) {
 
 func TestTruncateToolOutput_KeepsMiddleMarker(t *testing.T) {
 	big := strings.Repeat("x", 32*1024)
-	got := truncateToolOutput(big)
+	got := truncateToolOutputBudget(big, maxToolResultBytes)
 	if !strings.Contains(got, "END") && !strings.Contains(got, "truncated") {
 		t.Fatal("expected truncation marker in output")
 	}

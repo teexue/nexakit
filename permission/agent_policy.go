@@ -1,5 +1,7 @@
 package permission
 
+import "github.com/teexue/nexakit/tool"
+
 // Permissions configures tool-level permission rules for an agent.
 type Permissions struct {
 	AutoApprove []string
@@ -44,8 +46,8 @@ func (sp *AgentPolicy) Check(call ToolCall) Decision {
 // permissionToolName maps tools that share a permission surface.
 // read_image follows read_file so image reads are not configured separately.
 func permissionToolName(name string) string {
-	if name == "read_image" {
-		return "read_file"
+	if name == tool.ReadImageName {
+		return tool.ReadFileName
 	}
 	return name
 }

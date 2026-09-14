@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/teexue/nexakit/agent"
 	"github.com/teexue/nexakit/compaction"
 	"github.com/teexue/nexakit/event"
 	"github.com/teexue/nexakit/hook"
@@ -278,7 +279,7 @@ func consumeStream(
 
 // collectToolResults gathers tool results in index order.
 func collectToolResults(ctx context.Context, env runEnv, toolCalls []provider.ToolCall) []pendingResult {
-	if env.cfg.Agent.ToolExecMode() == "parallel" {
+	if env.cfg.Agent.ToolExecMode() == agent.ToolExecParallel {
 		return collectParallelResults(ctx, env, toolCalls)
 	}
 	return collectSerialResults(ctx, env, toolCalls)
@@ -371,7 +372,7 @@ func recordToolResults(cfg Config, results []pendingResult, window int) {
 				Role:    provider.RoleUser,
 				Content: label,
 				ContentParts: append([]provider.ContentPart{{
-					Type: "text", Text: label,
+					Type: provider.ContentPartText, Text: label,
 				}}, imgs...),
 			})
 		}

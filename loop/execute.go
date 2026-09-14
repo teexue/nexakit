@@ -130,14 +130,15 @@ func emitToolError(ctx context.Context, hooks *hook.Chain, call provider.ToolCal
 	return json.RawMessage(outVal)
 }
 
-// imageContentParts keeps only image_url parts for multimodal follow-up messages.
+// imageContentParts keeps only usable image parts for multimodal follow-up
+// messages, reusing the provider's shared image predicate.
 func imageContentParts(parts []provider.ContentPart) []provider.ContentPart {
 	if len(parts) == 0 {
 		return nil
 	}
 	out := make([]provider.ContentPart, 0, len(parts))
 	for _, p := range parts {
-		if p.Type == "image_url" && p.ImageURL != nil && p.ImageURL.URL != "" {
+		if provider.IsImagePart(p) {
 			out = append(out, p)
 		}
 	}

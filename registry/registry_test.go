@@ -8,7 +8,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/teexue/nexakit/builtin"
 	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/tool"
 )
@@ -29,7 +28,7 @@ func (c *concTool) Execute(_ context.Context, _ json.RawMessage) (tool.Result, e
 
 func TestRegisterAndGet(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 
 	tool, ok := reg.Get("get_time")
 	if !ok {
@@ -42,9 +41,9 @@ func TestRegisterAndGet(t *testing.T) {
 
 func TestRegisterDuplicate(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	// Try registering get_time again.
-	var e builtin.GetTime
+	var e tool.GetTime
 	if err := reg.Register(e); err == nil {
 		t.Fatal("expected error for duplicate registration")
 	}
@@ -62,7 +61,7 @@ func TestRegisterEmptyName(t *testing.T) {
 
 func TestDefinitions(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 
 	defs, err := reg.Definitions([]string{"get_time", "read_file"})
 	if err != nil {
@@ -86,7 +85,7 @@ func TestDefinitionsUnknownTool(t *testing.T) {
 
 func TestNames(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 
 	names := reg.Names()
 	if len(names) != 12 {
@@ -111,7 +110,7 @@ func TestNamesEmpty(t *testing.T) {
 
 func TestList(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 
 	tools := reg.List()
 	if len(tools) != 12 {
@@ -128,7 +127,7 @@ func TestList(t *testing.T) {
 
 func TestValidateTools(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 
 	if err := reg.ValidateTools([]string{"get_time", "read_file"}); err != nil {
 		t.Fatalf("ValidateTools: %v", err)
@@ -137,7 +136,7 @@ func TestValidateTools(t *testing.T) {
 
 func TestValidateToolsMissing(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 
 	err := reg.ValidateTools([]string{"nonexistent", "also_missing"})
 	if err == nil {
@@ -154,7 +153,7 @@ func TestValidateToolsMissing(t *testing.T) {
 
 func TestValidateToolsEmpty(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 
 	// Empty list should be valid.
 	if err := reg.ValidateTools([]string{}); err != nil {
@@ -255,7 +254,7 @@ func TestConcurrentRegisterUnregister(t *testing.T) {
 
 func TestConcurrentDefinitionsAndValidate(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 
 	names := reg.Names()
 

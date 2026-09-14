@@ -20,12 +20,12 @@ import (
 // down to the target budget, so the conversation degrades gracefully rather
 // than cliff-edge.
 type CascadeCompactor struct {
+	usageBase
 	tokenLimit    int // trigger line (unused for fit, kept for legacy triggers)
 	targetTokens  int // post-compaction budget
 	contextWindow int
 	keepRecent    int
 	keepHead      int
-	currentTokens int
 	provider      provider.Provider
 	model         string
 	maxOutput     int
@@ -42,12 +42,12 @@ func NewCascadeCompactor(cfg Config) *CascadeCompactor {
 		kH = 0
 	}
 	return &CascadeCompactor{
+		usageBase:     usageBase{currentTokens: cfg.CurrentTokens},
 		tokenLimit:    cfg.TokenLimit,
 		targetTokens:  cfg.TargetTokens,
 		contextWindow: cfg.ContextWindow,
 		keepRecent:    kR,
 		keepHead:      kH,
-		currentTokens: cfg.CurrentTokens,
 		provider:      cfg.Provider,
 		model:         cfg.Model,
 		maxOutput:     cfg.MaxOutput,
@@ -105,14 +105,6 @@ func (c *CascadeCompactor) Compact(ctx context.Context, messages []provider.Mess
 		}
 	}
 	return res, nil // fall back to the snip result if collapse failed
-}
-
-// currentUsage returns the known token usage when available, else the estimate.
-func (c *CascadeCompactor) currentUsage(messages []provider.Message) int {
-	if c.currentTokens > 0 {
-		return c.currentTokens
-	}
-	return EstimateTokens(messages)
 }
 
 // pressure returns current usage as a fraction of the context window.

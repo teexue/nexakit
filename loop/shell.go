@@ -1,18 +1,18 @@
 package loop
 
-import "context"
+import (
+	"context"
 
-type ctxKeyShell struct{}
+	"github.com/teexue/nexakit/tool"
+)
 
 // GetShell returns the preferred shell id from context, or empty for auto.
+// It delegates to tool, which owns the run-scoped tool context keys.
 func GetShell(ctx context.Context) string {
-	if v, ok := ctx.Value(ctxKeyShell{}).(string); ok {
-		return v
-	}
-	return ""
+	return tool.GetShell(ctx)
 }
 
 // WithShell returns a context with the preferred shell id set.
 func WithShell(ctx context.Context, id string) context.Context {
-	return context.WithValue(ctx, ctxKeyShell{}, id)
+	return tool.WithShell(ctx, id)
 }

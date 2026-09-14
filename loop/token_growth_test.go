@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/teexue/nexakit/compaction"
 	"github.com/teexue/nexakit/provider"
 	"github.com/teexue/nexakit/session"
 )
@@ -39,7 +40,7 @@ func TestTokenGrowthSimulated(t *testing.T) {
 		oldSession.AddMessages(provider.Message{Role: provider.RoleAssistant, Content: "done"})
 
 		newSession.AddMessages(provider.Message{Role: provider.RoleAssistant, Content: "using tool"})
-		newSession.AddMessages(provider.Message{Role: provider.RoleTool, ToolCallID: "c1", Name: "run_command", Content: truncateToolOutput(bigOutput)})
+		newSession.AddMessages(provider.Message{Role: provider.RoleTool, ToolCallID: "c1", Name: "run_command", Content: truncateToolOutputBudget(bigOutput, maxToolResultBytes)})
 		newSession.AddMessages(provider.Message{Role: provider.RoleAssistant, Content: "done"})
 
 		// Each turn re-sends the full history accumulated so far.
@@ -49,10 +50,15 @@ func TestTokenGrowthSimulated(t *testing.T) {
 		// Apply compaction on the new session every turn (as compactIfNeeded does).
 		window := provider.EffectiveContextWindow("unknown-model", 0)
 		reserve := provider.EffectiveMaxOutput("unknown-model", 0)
-		limit := compactionTokenLimit(window, reserve, 0)
+		limit := compaction.ResolveTokenLimit(window, reserve, 0)
 		if limit > 0 {
-			if msgs := compactMessages(context.Background(), newSession.GetMessages(), limit, 0, 20); msgs != nil {
-				newSession.SetMessages(msgs)
+			cmp := compaction.NewCompactor(compaction.Config{
+				Strategy:   compaction.StrategyTruncation,
+				TokenLimit: limit,
+				KeepRecent: 20,
+			})
+			if res, err := cmp.Compact(context.Background(), newSession.GetMessages()); err == nil && res != nil {
+				newSession.SetMessages(res.Compacted)
 			}
 		}
 	}

@@ -287,9 +287,9 @@ func convertMessages(msgs []Message) (string, []anthropicMessage) {
 			if len(m.ContentParts) > 0 {
 				blocks := make([]anthropicBlock, 0, len(m.ContentParts))
 				for _, p := range m.ContentParts {
-					if p.Type == "text" {
-						blocks = append(blocks, anthropicBlock{Type: "text", Text: p.Text})
-					} else if p.Type == "image_url" && p.ImageURL != nil {
+					if p.Type == ContentPartText {
+						blocks = append(blocks, anthropicBlock{Type: ContentPartText, Text: p.Text})
+					} else if p.Type == ContentPartImage && p.ImageURL != nil {
 						mediaType, data := parseDataURI(p.ImageURL.URL)
 						blocks = append(blocks, anthropicBlock{
 							Type: "image",

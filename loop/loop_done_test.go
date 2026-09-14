@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/teexue/nexakit/agent"
-	"github.com/teexue/nexakit/builtin"
 	"github.com/teexue/nexakit/event"
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/provider"
@@ -18,7 +17,7 @@ import (
 
 func TestRunDoneCarriesContextWindow(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{
@@ -53,7 +52,7 @@ func TestRunDoneCarriesContextWindow(t *testing.T) {
 
 func TestDoneCarriesConfiguredContextWindow(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{
@@ -98,7 +97,7 @@ func (cacheAwareProvider) Stream(ctx context.Context, _ provider.Request) (<-cha
 // Done events should carry prompt cache stats reported by the provider.
 func TestRunDoneCarriesCacheStats(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{
@@ -135,7 +134,7 @@ func TestRunDoneCarriesCacheStats(t *testing.T) {
 
 func TestRunDoneTruncatedWhenHittingMaxTokens(t *testing.T) {
 	reg := registry.New()
-	builtin.RegisterAll(reg, t.TempDir())
+	registry.RegisterBuiltin(reg, t.TempDir())
 	reg.MustRegister(echoTool{})
 
 	sc := &agent.Agent{

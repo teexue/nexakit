@@ -1,3 +1,5 @@
+// Package mcp is a Model Context Protocol client. The handshake identity is
+// supplied by the caller and never wrapped in audit logging.
 package mcp
 
 import "context"

@@ -9,16 +9,10 @@ const maxToolResultBytes = 16 * 1024 // 16 KB per tool result
 // a sliver so the model still sees what the tool produced.
 const minToolResultBytes = 4 * 1024 // 4 KB per tool result
 
-// truncateToolOutput keeps the head and tail of an oversized tool output: the
-// beginning usually shows what ran, and the tail carries errors/exit context —
-// the parts that matter most for the next turn.
-func truncateToolOutput(s string) string {
-	return truncateToolOutputBudget(s, maxToolResultBytes)
-}
-
-// truncateToolOutputBudget is the pressure-aware variant: it trims oversized
-// tool output to budget bytes (head + tail), so chatty results shrink as the
-// context window fills and delay the next compaction.
+// truncateToolOutputBudget trims oversized tool output to budget bytes
+// (head + tail), so chatty results shrink as the context window fills and delay
+// the next compaction. The head usually shows what ran, and the tail carries
+// errors/exit context — the parts that matter most for the next turn.
 func truncateToolOutputBudget(s string, budget int) string {
 	if budget <= 0 {
 		return s
