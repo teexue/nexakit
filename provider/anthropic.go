@@ -106,7 +106,8 @@ func (a *Anthropic) ListModels(ctx context.Context) ([]ModelInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("anthropic models request: %w", err)
 	}
-	defer resp.Body.Close()
+	// The body is fully read or discarded below; a close error is irrelevant.
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode >= 400 {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("anthropic models request failed: status %d: %s", resp.StatusCode, string(body))

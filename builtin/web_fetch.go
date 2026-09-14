@@ -84,7 +84,8 @@ func (WebFetch) Execute(ctx context.Context, input json.RawMessage) (tool.Result
 	if err != nil {
 		return tool.Result{}, fmt.Errorf("fetch url: %w", err)
 	}
-	defer resp.Body.Close()
+	// The body is read below; a close error cannot affect the fetched content.
+	defer func() { _ = resp.Body.Close() }()
 
 	maxBytes := args.MaxBytes
 	if maxBytes <= 0 {

@@ -11,14 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/teexue/nexakit/agent"
+	"github.com/teexue/nexakit/builtin"
 	"github.com/teexue/nexakit/event"
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/permission"
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/session"
 	"github.com/teexue/nexakit/tool"
-	"github.com/teexue/nexakit/builtin"
-	"github.com/teexue/nexakit/registry"
 )
 
 func TestDelegateTask_RequiresSpawn(t *testing.T) {
@@ -36,16 +36,16 @@ func TestDelegateTask_RunsSubAgent(t *testing.T) {
 	}
 	sess := session.NewForUser("agt", "usr")
 	ctx := loop.WithSpawn(context.Background(), loop.Spawn{
-		Registry:    reg,
+		Registry: reg,
 		NewProvider: func(*agent.Agent) (provider.Provider, error) {
 			return &provider.MockProvider{
 				Calls: [][]provider.MockStep{{{Text: "ok"}}},
 			}, nil
 		},
-		Policy:      permission.AllowAllPolicy{},
-		Agent:       parent,
-		UserID:      "usr",
-		SessionID:   sess.ID,
+		Policy:    permission.AllowAllPolicy{},
+		Agent:     parent,
+		UserID:    "usr",
+		SessionID: sess.ID,
 	})
 	ctx = loop.WithParentEventChan(ctx, make(chan event.Event, 8))
 
@@ -65,7 +65,7 @@ func TestDelegateTask_ChildCannotNest(t *testing.T) {
 		SystemPrompt: "parent", MaxTurns: 3, MaxTokens: 128,
 	}
 	ctx := loop.WithSpawn(context.Background(), loop.Spawn{
-		Registry:    reg,
+		Registry: reg,
 		NewProvider: func(*agent.Agent) (provider.Provider, error) {
 			return &provider.MockProvider{
 				Calls: [][]provider.MockStep{{{Text: "ok"}}},

@@ -52,8 +52,8 @@ func (a *Anthropic) readStream(ctx context.Context, r io.Reader, ch chan<- Chunk
 			continue
 		}
 
-		sec := StreamEventContext{Ctx: ctx, Ch: ch, ToolAcc: toolAcc, LastToolIdx: &lastToolIdx, FlushLastTool: flushLastTool, InputTokens: inputTokens, OutputTokens: outputTokens, CacheReadInputTokens: cacheRead, CacheCreationInputTokens: cacheCreation}
-		done, tokens := a.processStreamEvent(sec, ev)
+		sec := StreamEventContext{Ch: ch, ToolAcc: toolAcc, LastToolIdx: &lastToolIdx, FlushLastTool: flushLastTool, InputTokens: inputTokens, OutputTokens: outputTokens, CacheReadInputTokens: cacheRead, CacheCreationInputTokens: cacheCreation}
+		done, tokens := a.processStreamEvent(ctx, sec, ev)
 		if tokens != nil {
 			inputTokens, outputTokens = tokens.InputTokens, tokens.OutputTokens
 			cacheRead, cacheCreation = tokens.CacheReadInputTokens, tokens.CacheCreationInputTokens
@@ -65,9 +65,11 @@ func (a *Anthropic) readStream(ctx context.Context, r io.Reader, ch chan<- Chunk
 	flushLastTool()
 }
 
-// StreamEventContext holds state for processing Anthropic SSE events.
+// StreamEventContext holds transient per-event state for processing Anthropic
+// SSE events. It carries only scalars and accumulators assembled fresh from
+// readStream's locals each event; the context.Context is passed alongside
+// rather than stored here.
 type StreamEventContext struct {
-	Ctx                      context.Context
 	Ch                       chan<- Chunk
 	ToolAcc                  map[int]*ToolCall
 	LastToolIdx              *int
@@ -79,21 +81,21 @@ type StreamEventContext struct {
 }
 
 // processStreamEvent processes a single Anthropic SSE event. Returns (finished, tokenUpdate).
-func (a *Anthropic) processStreamEvent(sec StreamEventContext, ev anthropicStreamEvent) (bool, *Chunk) {
+func (a *Anthropic) processStreamEvent(ctx context.Context, sec StreamEventContext, ev anthropicStreamEvent) (bool, *Chunk) {
 	switch ev.Type {
 	case "message_start":
 		applyMessageStart(&sec, ev)
 	case "content_block_start":
 		applyContentBlockStart(&sec, ev)
 	case "content_block_delta":
-		if done := handleContentBlockDelta(sec, ev); done {
+		if done := handleContentBlockDelta(ctx, sec, ev); done {
 			return true, nil
 		}
 	case "message_delta":
-		return applyMessageDelta(&sec, ev)
+		return applyMessageDelta(ctx, &sec, ev)
 	case "message_stop":
 		sec.FlushLastTool()
-		sendChunk(sec.Ctx, sec.Ch, Chunk{Done: true, InputTokens: sec.InputTokens, OutputTokens: sec.OutputTokens, CacheReadInputTokens: sec.CacheReadInputTokens, CacheCreationInputTokens: sec.CacheCreationInputTokens})
+		sendChunk(ctx, sec.Ch, Chunk{Done: true, InputTokens: sec.InputTokens, OutputTokens: sec.OutputTokens, CacheReadInputTokens: sec.CacheReadInputTokens, CacheCreationInputTokens: sec.CacheCreationInputTokens})
 		return true, nil
 	}
 	return false, chunkTokenUpdate(sec)
@@ -132,7 +134,7 @@ func applyContentBlockStart(sec *StreamEventContext, ev anthropicStreamEvent) {
 
 // applyMessageDelta applies message_delta usage and emits the final chunk on
 // end_turn / max_tokens. Returns (finished, tokenUpdate).
-func applyMessageDelta(sec *StreamEventContext, ev anthropicStreamEvent) (bool, *Chunk) {
+func applyMessageDelta(ctx context.Context, sec *StreamEventContext, ev anthropicStreamEvent) (bool, *Chunk) {
 	if ev.Usage != nil {
 		sec.OutputTokens = ev.Usage.OutputTokens
 		// message_delta usage typically carries only output_tokens; do not
@@ -147,7 +149,7 @@ func applyMessageDelta(sec *StreamEventContext, ev anthropicStreamEvent) (bool, 
 	sec.FlushLastTool()
 	*sec.LastToolIdx = -1
 	if ev.Delta.StopReason == "end_turn" || ev.Delta.StopReason == "max_tokens" {
-		sendChunk(sec.Ctx, sec.Ch, Chunk{
+		sendChunk(ctx, sec.Ch, Chunk{
 			Done: true, FinishReason: ev.Delta.StopReason,
 			InputTokens: sec.InputTokens, OutputTokens: sec.OutputTokens,
 			CacheReadInputTokens: sec.CacheReadInputTokens, CacheCreationInputTokens: sec.CacheCreationInputTokens,
@@ -166,12 +168,12 @@ func chunkTokenUpdate(sec StreamEventContext) *Chunk {
 	}
 }
 
-func handleContentBlockDelta(sec StreamEventContext, ev anthropicStreamEvent) bool {
+func handleContentBlockDelta(ctx context.Context, sec StreamEventContext, ev anthropicStreamEvent) bool {
 	switch ev.Delta.Type {
 	case "text_delta":
 		if ev.Delta.Text != "" {
 			select {
-			case <-sec.Ctx.Done():
+			case <-ctx.Done():
 				return true
 			case sec.Ch <- Chunk{TextDelta: ev.Delta.Text}:
 			}
@@ -179,7 +181,7 @@ func handleContentBlockDelta(sec StreamEventContext, ev anthropicStreamEvent) bo
 	case "thinking_delta":
 		if ev.Delta.Thinking != "" {
 			select {
-			case <-sec.Ctx.Done():
+			case <-ctx.Done():
 				return true
 			case sec.Ch <- Chunk{ReasoningDelta: ev.Delta.Thinking}:
 			}

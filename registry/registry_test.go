@@ -8,9 +8,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/teexue/nexakit/tool"
 	"github.com/teexue/nexakit/builtin"
 	"github.com/teexue/nexakit/registry"
+	"github.com/teexue/nexakit/tool"
 )
 
 // concTool is a minimal tool for concurrent registration tests.

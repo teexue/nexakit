@@ -10,13 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/teexue/nexakit/agent"
+	"github.com/teexue/nexakit/builtin"
 	"github.com/teexue/nexakit/event"
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/session"
 	"github.com/teexue/nexakit/tool"
-	"github.com/teexue/nexakit/builtin"
-	"github.com/teexue/nexakit/registry"
 )
 
 // echoTool is a test-local stub standing in for the removed builtin echo tool.

@@ -1,3 +1,5 @@
+// Package event defines the agent stream event contract: the only outward
+// type is Event. Adding a Type requires updating AllTypes and PrintEvents.
 package event
 
 import (
@@ -129,7 +131,6 @@ func StreamEvents(ctx context.Context, w io.Writer, events <-chan Event) error {
 }
 
 // PrintEvents prints human-readable events to stdout.
-// Deprecated: use tui.PrintEvents for Claude Code–style output.
 func PrintEvents(events <-chan Event) {
 	for ev := range events {
 		switch ev.Type {

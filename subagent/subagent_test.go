@@ -10,9 +10,9 @@ import (
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/permission"
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/session"
 	"github.com/teexue/nexakit/tool"
-	"github.com/teexue/nexakit/registry"
 )
 
 type testTool struct {

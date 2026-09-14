@@ -75,7 +75,8 @@ func (r ReadFile) Execute(ctx context.Context, input json.RawMessage) (tool.Resu
 	if err != nil {
 		return tool.Result{}, fmt.Errorf("read file: %w", err)
 	}
-	defer f.Close()
+	// A close error on a read-only handle cannot affect the returned bytes.
+	defer func() { _ = f.Close() }()
 
 	startLine := args.Offset
 	if startLine < 1 {

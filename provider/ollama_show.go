@@ -83,7 +83,8 @@ func (o *Ollama) fetchShowDetail(ctx context.Context, model string) (*ollamaShow
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	// The body is drained below; a close error is irrelevant to the result.
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("ollama show request failed: status %d", resp.StatusCode)
 	}

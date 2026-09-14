@@ -16,8 +16,8 @@ import (
 // Vision payloads are base64'd into every subsequent LLM request; keep each
 // image small so a handful of reads cannot trip gateway 413 body limits.
 const (
-	visionMaxSide    = 1568
-	visionMaxEncoded = 800 * 1024
+	visionMaxSide     = 1568
+	visionMaxEncoded  = 800 * 1024
 	visionJPEGQuality = 80
 )
 

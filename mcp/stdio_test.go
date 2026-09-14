@@ -68,7 +68,7 @@ func TestStdioClient_WriteMessage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 
 	client := &StdioClient{name: "test"}
 	client.stdin = w
@@ -77,7 +77,7 @@ func TestStdioClient_WriteMessage(t *testing.T) {
 	if err := client.writeMessage(msg); err != nil {
 		t.Fatal(err)
 	}
-	w.Close()
+	_ = w.Close()
 
 	scanner := bufio.NewScanner(r)
 	if !scanner.Scan() {
@@ -113,7 +113,7 @@ func TestStdioClient_WithMockServer(t *testing.T) {
 	if err := client.Connect(ctx); err != nil {
 		t.Fatalf("connect: %v", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 	assertMockEchoTool(t, ctx, client)
 }
 

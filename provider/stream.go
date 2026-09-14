@@ -47,14 +47,15 @@ func StreamHTTP(ctx context.Context, client *http.Client, req *http.Request, rea
 
 	if resp.StatusCode >= 400 {
 		body, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		return nil, fmt.Errorf("api error (status %d): %s", resp.StatusCode, string(body))
 	}
 
 	ch := make(chan Chunk)
 	go func() {
 		defer close(ch)
-		defer resp.Body.Close()
+		// Body is consumed by readFunc; a close error cannot affect the stream.
+		defer func() { _ = resp.Body.Close() }()
 		readFunc(ctx, resp.Body, ch)
 	}()
 
