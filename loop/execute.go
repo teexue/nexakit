@@ -13,47 +13,35 @@ import (
 	"github.com/teexue/nexakit/tool"
 )
 
-// ToolExecContext holds dependencies for executing a single tool call.
-type ToolExecContext struct {
-	Ctx      context.Context
-	Reg      ToolRegistry
-	Call     provider.ToolCall
-	Out      chan<- event.Event
-	Log      *slog.Logger
-	Pol      permission.Policy
-	Hooks    *hook.Chain
-	Approver Approver
-}
-
 // executeOneTool runs a single tool call and emits tool_start / tool_result events.
-func executeOneTool(tc ToolExecContext) tool.Result {
-	return executeTool(tc)
+func executeOneTool(ctx context.Context, env runEnv, call provider.ToolCall) tool.Result {
+	return executeTool(ctx, env, call)
 }
 
-func executeTool(tc ToolExecContext) tool.Result {
-	inputJSON := prepareInput(tc.Call.Arguments, tc.Log)
-	emit(tc.Ctx, tc.Out, event.Event{Type: event.TypeToolStart, Tool: tc.Call.Name, Input: inputJSON, ToolCallID: tc.Call.ID})
+func executeTool(ctx context.Context, env runEnv, call provider.ToolCall) tool.Result {
+	inputJSON := prepareInput(call.Arguments, env.log)
+	emit(ctx, env.out, event.Event{Type: event.TypeToolStart, Tool: call.Name, Input: inputJSON, ToolCallID: call.ID})
 
-	if result, denied := checkPermission(tc.Ctx, tc.Pol, tc.Approver, tc.Call, tc.Out); denied {
+	if result, denied := checkPermission(ctx, env.pol, env.approver, call, env.out); denied {
 		return tool.Result{Output: result}
 	}
 
-	fireOnToolStartHook(tc.Hooks, tc.Call, tc.Log)
+	fireOnToolStartHook(env.hooks, call, env.log)
 
-	t, ok := tc.Reg.Get(tc.Call.Name)
+	t, ok := env.cfg.Registry.Get(call.Name)
 	if !ok {
-		return tool.Result{Output: emitToolNotFound(tc.Ctx, tc.Hooks, tc.Call, tc.Out)}
+		return tool.Result{Output: emitToolNotFound(ctx, env.hooks, call, env.out)}
 	}
 
-	res, execErr := runTool(tc.Ctx, t, tc.Call, tc.Out)
+	res, execErr := runTool(ctx, t, call, env.out)
 	if execErr != nil {
-		return tool.Result{Output: emitToolError(tc.Ctx, tc.Hooks, tc.Call, execErr, tc.Out)}
+		return tool.Result{Output: emitToolError(ctx, env.hooks, call, execErr, env.out)}
 	}
 
-	if tc.Hooks != nil {
-		_ = tc.Hooks.OnToolResult(tc.Ctx, hook.ToolResultInfo{Name: tc.Call.Name, Output: res.Output})
+	if env.hooks != nil {
+		_ = env.hooks.OnToolResult(ctx, hook.ToolResultInfo{Name: call.Name, Output: res.Output})
 	}
-	emit(tc.Ctx, tc.Out, event.Event{Type: event.TypeToolResult, Tool: tc.Call.Name, Output: res.Output, ToolCallID: tc.Call.ID})
+	emit(ctx, env.out, event.Event{Type: event.TypeToolResult, Tool: call.Name, Output: res.Output, ToolCallID: call.ID})
 	return res
 }
 

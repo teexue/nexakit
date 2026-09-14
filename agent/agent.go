@@ -1,3 +1,6 @@
+// Package agent holds runtime agent configuration and its validation.
+// It describes behavior (prompt, tools, model, limits) but reads no files
+// and defines no on-disk format.
 package agent
 
 import "github.com/teexue/nexakit/permission"

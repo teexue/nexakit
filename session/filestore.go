@@ -78,7 +78,8 @@ func (fs *FileStore) Save(sess *Session) error {
 		return fmt.Errorf("write temp file: %w", err)
 	}
 	if err := os.Rename(tmp, path); err != nil {
-		os.Remove(tmp)
+		// Best-effort cleanup; the rename error is the one that matters.
+		_ = os.Remove(tmp)
 		return fmt.Errorf("rename temp file: %w", err)
 	}
 	return nil

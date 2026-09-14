@@ -1,3 +1,5 @@
+// Package tool defines the unified capability abstraction. Every capability
+// the model can invoke is a Tool; the loop holds no tool-specific logic.
 package tool
 
 import (

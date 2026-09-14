@@ -1,0 +1,28 @@
+# Lint gate for this module. Thresholds mirror AGENTS.md ("Maintainability"):
+# cyclomatic complexity <= 15, nesting depth <= 4, function length <= 80.
+# Do not loosen these to make a change pass; split the code instead.
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - gocyclo
+    - nestif
+    - funlen
+  settings:
+    gocyclo:
+      min-complexity: 15
+    nestif:
+      min-complexity: 4
+    funlen:
+      lines: 80
+      statements: 60
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

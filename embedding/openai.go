@@ -128,7 +128,8 @@ func (e *OpenAIEmbedder) embedBatch(ctx context.Context, texts []string) ([][]fl
 	if err != nil {
 		return nil, fmt.Errorf("embed request: %w", err)
 	}
-	defer resp.Body.Close()
+	// The body is fully read below; a close error cannot affect the result.
+	defer func() { _ = resp.Body.Close() }()
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("read embed response: %w", err)

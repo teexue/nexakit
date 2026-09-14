@@ -8,12 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/teexue/nexakit/agent"
+	"github.com/teexue/nexakit/builtin"
 	"github.com/teexue/nexakit/event"
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/provider"
-	"github.com/teexue/nexakit/session"
-	"github.com/teexue/nexakit/builtin"
 	"github.com/teexue/nexakit/registry"
+	"github.com/teexue/nexakit/session"
 )
 
 func TestRunDoneCarriesContextWindow(t *testing.T) {

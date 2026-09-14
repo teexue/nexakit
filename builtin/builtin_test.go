@@ -10,6 +10,23 @@ import (
 	"github.com/teexue/nexakit/builtin"
 )
 
+// mustWriteFile writes data or fails the test; a setup failure should not be
+// silently swallowed and let a later assertion report a misleading error.
+func mustWriteFile(t *testing.T, path string, data []byte) {
+	t.Helper()
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// mustMkdir creates a directory (and parents) or fails the test.
+func mustMkdir(t *testing.T, path string) {
+	t.Helper()
+	if err := os.MkdirAll(path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGetTime(t *testing.T) {
 	var g builtin.GetTime
 	res, err := g.Execute(context.Background(), json.RawMessage("{}"))
@@ -207,9 +224,9 @@ func TestWriteFileTraversal(t *testing.T) {
 
 func TestListDirectory(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a"), 0o644)
-	os.WriteFile(filepath.Join(dir, "b.go"), []byte("b"), 0o644)
-	os.Mkdir(filepath.Join(dir, "sub"), 0o755)
+	mustWriteFile(t, filepath.Join(dir, "a.txt"), []byte("a"))
+	mustWriteFile(t, filepath.Join(dir, "b.go"), []byte("b"))
+	mustMkdir(t, filepath.Join(dir, "sub"))
 
 	ld := builtin.ListDirectory{WorkDir: dir}
 	input, _ := json.Marshal(map[string]any{"path": "."})
@@ -229,8 +246,8 @@ func TestListDirectory(t *testing.T) {
 
 func TestListDirectoryPattern(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a"), 0o644)
-	os.WriteFile(filepath.Join(dir, "b.go"), []byte("b"), 0o644)
+	mustWriteFile(t, filepath.Join(dir, "a.txt"), []byte("a"))
+	mustWriteFile(t, filepath.Join(dir, "b.go"), []byte("b"))
 
 	ld := builtin.ListDirectory{WorkDir: dir}
 	input, _ := json.Marshal(map[string]any{"path": ".", "pattern": "*.go"})
@@ -250,9 +267,9 @@ func TestListDirectoryPattern(t *testing.T) {
 
 func TestListDirectoryRecursive(t *testing.T) {
 	dir := t.TempDir()
-	os.MkdirAll(filepath.Join(dir, "sub"), 0o755)
-	os.WriteFile(filepath.Join(dir, "root.txt"), []byte("r"), 0o644)
-	os.WriteFile(filepath.Join(dir, "sub", "child.txt"), []byte("c"), 0o644)
+	mustMkdir(t, filepath.Join(dir, "sub"))
+	mustWriteFile(t, filepath.Join(dir, "root.txt"), []byte("r"))
+	mustWriteFile(t, filepath.Join(dir, "sub", "child.txt"), []byte("c"))
 
 	ld := builtin.ListDirectory{WorkDir: dir}
 	input, _ := json.Marshal(map[string]any{"path": "."})
@@ -275,7 +292,7 @@ func TestListDirectoryRecursive(t *testing.T) {
 
 func TestEditFile(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "code.go"), []byte("package main\nfunc main() {}\n"), 0o644)
+	mustWriteFile(t, filepath.Join(dir, "code.go"), []byte("package main\nfunc main() {}\n"))
 
 	ef := builtin.EditFile{WorkDir: dir}
 	input, _ := json.Marshal(map[string]any{
@@ -305,7 +322,7 @@ func TestEditFile(t *testing.T) {
 
 func TestEditFileNotFound(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "f.txt"), []byte("hello"), 0o644)
+	mustWriteFile(t, filepath.Join(dir, "f.txt"), []byte("hello"))
 
 	ef := builtin.EditFile{WorkDir: dir}
 	input, _ := json.Marshal(map[string]any{
@@ -321,7 +338,7 @@ func TestEditFileNotFound(t *testing.T) {
 
 func TestEditFileAll(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "f.txt"), []byte("aaa bbb aaa"), 0o644)
+	mustWriteFile(t, filepath.Join(dir, "f.txt"), []byte("aaa bbb aaa"))
 
 	ef := builtin.EditFile{WorkDir: dir}
 	input, _ := json.Marshal(map[string]any{
@@ -336,7 +353,9 @@ func TestEditFileAll(t *testing.T) {
 	}
 
 	var out map[string]any
-	json.Unmarshal(res.Output, &out)
+	if err := json.Unmarshal(res.Output, &out); err != nil {
+		t.Fatal(err)
+	}
 	if out["replacements"].(float64) != 2 {
 		t.Fatalf("expected 2 replacements, got %v", out["replacements"])
 	}
@@ -411,7 +430,9 @@ func TestRunCommandFailure(t *testing.T) {
 	}
 
 	var out map[string]any
-	json.Unmarshal(res.Output, &out)
+	if err := json.Unmarshal(res.Output, &out); err != nil {
+		t.Fatal(err)
+	}
 	if out["exit_code"].(float64) != 1 {
 		t.Fatalf("expected exit code 1, got %v", out["exit_code"])
 	}
@@ -419,7 +440,7 @@ func TestRunCommandFailure(t *testing.T) {
 
 func TestRunCommandWorkdir(t *testing.T) {
 	dir := t.TempDir()
-	os.Mkdir(filepath.Join(dir, "sub"), 0o755)
+	mustMkdir(t, filepath.Join(dir, "sub"))
 
 	rc := builtin.RunCommand{WorkDir: dir}
 	input, _ := json.Marshal(map[string]any{"command": "pwd", "workdir": "sub"})
@@ -429,7 +450,9 @@ func TestRunCommandWorkdir(t *testing.T) {
 	}
 
 	var out map[string]any
-	json.Unmarshal(res.Output, &out)
+	if err := json.Unmarshal(res.Output, &out); err != nil {
+		t.Fatal(err)
+	}
 	stdout := out["stdout"].(string)
 	if stdout != filepath.Join(dir, "sub")+"\n" {
 		t.Fatalf("expected %q, got %q", filepath.Join(dir, "sub")+"\n", stdout)
@@ -440,8 +463,8 @@ func TestRunCommandWorkdir(t *testing.T) {
 
 func TestSearchFiles(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "a.go"), []byte("package main\nfunc main() {}\n"), 0o644)
-	os.WriteFile(filepath.Join(dir, "b.txt"), []byte("no match here\n"), 0o644)
+	mustWriteFile(t, filepath.Join(dir, "a.go"), []byte("package main\nfunc main() {}\n"))
+	mustWriteFile(t, filepath.Join(dir, "b.txt"), []byte("no match here\n"))
 
 	sf := builtin.SearchFiles{WorkDir: dir}
 	input, _ := json.Marshal(map[string]any{"pattern": "func main", "glob": "*.go"})
@@ -451,7 +474,9 @@ func TestSearchFiles(t *testing.T) {
 	}
 
 	var out map[string]any
-	json.Unmarshal(res.Output, &out)
+	if err := json.Unmarshal(res.Output, &out); err != nil {
+		t.Fatal(err)
+	}
 	if out["count"].(float64) != 1 {
 		t.Fatalf("expected 1 match, got %v", out["count"])
 	}
@@ -463,7 +488,7 @@ func TestSearchFilesMaxResults(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		content += "line with pattern\n"
 	}
-	os.WriteFile(filepath.Join(dir, "big.txt"), []byte(content), 0o644)
+	mustWriteFile(t, filepath.Join(dir, "big.txt"), []byte(content))
 
 	sf := builtin.SearchFiles{WorkDir: dir}
 	input, _ := json.Marshal(map[string]any{"pattern": "pattern", "max_results": 5})
@@ -473,7 +498,9 @@ func TestSearchFilesMaxResults(t *testing.T) {
 	}
 
 	var out map[string]any
-	json.Unmarshal(res.Output, &out)
+	if err := json.Unmarshal(res.Output, &out); err != nil {
+		t.Fatal(err)
+	}
 	if out["count"].(float64) != 5 {
 		t.Fatalf("expected 5 matches, got %v", out["count"])
 	}

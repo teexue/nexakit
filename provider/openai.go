@@ -79,7 +79,8 @@ func (o *OpenAI) ListModels(ctx context.Context) ([]ModelInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("openai models request: %w", err)
 	}
-	defer resp.Body.Close()
+	// The body is drained below; a close error is irrelevant to the result.
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode >= 400 {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("openai models request failed: status %d: %s", resp.StatusCode, string(body))

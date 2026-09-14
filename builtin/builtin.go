@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/teexue/nexakit/tool"
 	"github.com/teexue/nexakit/registry"
+	"github.com/teexue/nexakit/tool"
 )
 
 // GetTime returns the current UTC time.

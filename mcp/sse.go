@@ -180,7 +180,8 @@ func (c *SSEClient) sendRequest(ctx context.Context, method string, params json.
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	// The RPC result is already read from ch; the body is drained implicitly.
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
 		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
@@ -212,7 +213,8 @@ func (c *SSEClient) sendNotification(ctx context.Context, method string, params 
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	// Fire-and-forget notification: the response body carries no useful data.
+	defer func() { _ = resp.Body.Close() }()
 	return nil
 }
 
@@ -230,7 +232,8 @@ func (c *SSEClient) listenSSE(ctx context.Context) {
 		c.logger.Error("log.mcp.sse.connect_failed", "name", c.name, "error", err)
 		return
 	}
-	defer resp.Body.Close()
+	// Closing the long-lived event stream cannot fail meaningfully here.
+	defer func() { _ = resp.Body.Close() }()
 
 	reader := bufio.NewReader(resp.Body)
 	for {

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/teexue/nexakit/tool"
 	"github.com/teexue/nexakit/registry"
+	"github.com/teexue/nexakit/tool"
 )
 
 func TestManager_NoServers(t *testing.T) {

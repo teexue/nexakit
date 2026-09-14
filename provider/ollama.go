@@ -160,24 +160,28 @@ func (o *Ollama) buildRequest(req Request) ollamaRequest {
 	// Ollama's runtime context window (num_ctx) defaults to 4096, which is
 	// usually far smaller than the effective window the loop assumes. Size
 	// Ollama's context to match so it does not silently truncate the prompt
-	// before compaction triggers. Only set num_ctx when we have confirmed
-	// (via /api/show) that it does not exceed the model's training context;
-	// an oversized num_ctx triggers Ollama's "requested context size too
-	// large for model" warning and can crash MoE models.
-	if req.MaxTokens > 0 || req.ContextWindow > 0 {
-		opts := ollamaOptions{}
-		if req.MaxTokens > 0 {
-			opts.NumPredict = EffectiveMaxOutput(req.Model, req.MaxTokens)
-		}
-		if req.ContextWindow > 0 {
-			if mx := o.cachedContextLength(req.Model); mx > 0 && req.ContextWindow <= mx {
-				opts.NumCtx = req.ContextWindow
-			}
-		}
-		out.Options = &opts
-	}
+	// before compaction triggers.
+	out.Options = o.buildOptions(req)
 	if o.keepAlive != "" {
 		out.KeepAlive = o.keepAlive
 	}
 	return out
+}
+
+// buildOptions derives num_predict / num_ctx for a request. num_ctx is only set
+// when /api/show confirms the requested window does not exceed the model's
+// training context; an oversized num_ctx triggers Ollama's "requested context
+// size too large for model" warning and can crash MoE models.
+func (o *Ollama) buildOptions(req Request) *ollamaOptions {
+	if req.MaxTokens <= 0 && req.ContextWindow <= 0 {
+		return nil
+	}
+	opts := &ollamaOptions{}
+	if req.MaxTokens > 0 {
+		opts.NumPredict = EffectiveMaxOutput(req.Model, req.MaxTokens)
+	}
+	if mx := o.cachedContextLength(req.Model); req.ContextWindow > 0 && mx > 0 && req.ContextWindow <= mx {
+		opts.NumCtx = req.ContextWindow
+	}
+	return opts
 }

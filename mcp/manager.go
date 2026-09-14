@@ -59,7 +59,7 @@ func (m *Manager) ConnectAll(ctx context.Context) []tool.Tool {
 		tools, err := client.ListTools(ctx)
 		if err != nil {
 			m.logger.Error("log.mcp.list_tools_failed", "name", cfg.Name, "error", err)
-			client.Close()
+			_ = client.Close()
 			continue
 		}
 
@@ -187,7 +187,7 @@ func (m *Manager) Reconnect(ctx context.Context, cfg ServerConfig) {
 		tools, err := client.ListTools(ctx)
 		if err != nil {
 			m.logger.Error("log.mcp.list_tools_reconnect_failed", "name", cfg.Name, "error", err)
-			client.Close()
+			_ = client.Close()
 			delay *= 2
 			if delay > maxDelay {
 				delay = maxDelay

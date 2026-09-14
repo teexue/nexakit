@@ -41,10 +41,11 @@ func TestChain_Order(t *testing.T) {
 	chain := hook.NewChain(r1, r2)
 
 	ctx := context.Background()
-	chain.OnTurnStart(ctx, hook.TurnInfo{TurnNumber: 1})
-	chain.OnToolStart(ctx, hook.ToolStartInfo{Name: "echo", Arguments: json.RawMessage(`{}`)})
-	chain.OnToolResult(ctx, hook.ToolResultInfo{Name: "echo", Output: json.RawMessage(`"ok"`)})
-	chain.OnTurnEnd(ctx, hook.TurnInfo{TurnNumber: 1})
+	// Errors are not the subject of this test; the recorded call order is.
+	_ = chain.OnTurnStart(ctx, hook.TurnInfo{TurnNumber: 1})
+	_ = chain.OnToolStart(ctx, hook.ToolStartInfo{Name: "echo", Arguments: json.RawMessage(`{}`)})
+	_ = chain.OnToolResult(ctx, hook.ToolResultInfo{Name: "echo", Output: json.RawMessage(`"ok"`)})
+	_ = chain.OnTurnEnd(ctx, hook.TurnInfo{TurnNumber: 1})
 
 	expected := []string{"turn_start", "start:echo", "result:echo", "turn_end"}
 	for _, h := range []*recordingHook{r1, r2} {

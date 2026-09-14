@@ -142,7 +142,8 @@ func scanFileForMatches(path, root string, re *regexp.Regexp) []searchMatch {
 	if err != nil {
 		return nil
 	}
-	defer file.Close()
+	// A close error on a read-only handle cannot affect the matches collected.
+	defer func() { _ = file.Close() }()
 
 	var results []searchMatch
 	scanner := bufio.NewScanner(file)
