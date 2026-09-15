@@ -10,6 +10,7 @@ import (
 
 	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/tool"
+	"github.com/teexue/nexakit/tool/builtin"
 )
 
 // concTool is a minimal tool for concurrent registration tests.
@@ -43,7 +44,7 @@ func TestRegisterDuplicate(t *testing.T) {
 	reg := registry.New()
 	registry.RegisterBuiltin(reg, t.TempDir())
 	// Try registering get_time again.
-	var e tool.GetTime
+	var e builtin.GetTime
 	if err := reg.Register(e); err == nil {
 		t.Fatal("expected error for duplicate registration")
 	}

@@ -9,6 +9,28 @@ import (
 	"github.com/teexue/nexakit/provider"
 )
 
+const (
+	defaultKeepRecent = 20
+	defaultKeepHead   = 2
+	// defaultTriggerRatio defaults to 1.0 so the trigger line is
+	// window - reserve (aligning with Claude Code's "effective window minus
+	// summary-output budget"). A configured trigger_ratio < 1 applies a
+	// further discount.
+	defaultTriggerRatio = 1.0
+	// defaultTargetRatio is the fraction of the context window compaction
+	// compresses down to. It sits below the trigger line so several new
+	// turns can accumulate before compaction fires again — without it,
+	// compressing right up to the trigger line causes compaction to re-fire
+	// on the very next turn.
+	defaultTargetRatio = 0.6
+	// summaryBudgetCap caps the tokens reserved for a compaction summary
+	// output (and the next completion), mirroring Claude Code's ~20K cap.
+	summaryBudgetCap = 20000
+	// trimRatio is the context-pressure fraction at which the cascade's first
+	// tier starts shrinking verbose tool results in place.
+	trimRatio = 0.6
+)
+
 // Strategy identifies a compaction strategy.
 type Strategy string
 
@@ -98,28 +120,6 @@ type Config struct {
 	// MaxOutput caps the generated summary length in tokens.
 	MaxOutput int
 }
-
-const (
-	defaultKeepRecent = 20
-	defaultKeepHead   = 2
-	// defaultTriggerRatio defaults to 1.0 so the trigger line is
-	// window - reserve (aligning with Claude Code's "effective window minus
-	// summary-output budget"). A configured trigger_ratio < 1 applies a
-	// further discount.
-	defaultTriggerRatio = 1.0
-	// defaultTargetRatio is the fraction of the context window compaction
-	// compresses down to. It sits below the trigger line so several new
-	// turns can accumulate before compaction fires again — without it,
-	// compressing right up to the trigger line causes compaction to re-fire
-	// on the very next turn.
-	defaultTargetRatio = 0.6
-	// summaryBudgetCap caps the tokens reserved for a compaction summary
-	// output (and the next completion), mirroring Claude Code's ~20K cap.
-	summaryBudgetCap = 20000
-	// trimRatio is the context-pressure fraction at which the cascade's first
-	// tier starts shrinking verbose tool results in place.
-	trimRatio = 0.6
-)
 
 // Defaults returns a Config with default values applied.
 func (c Config) Defaults() Config {

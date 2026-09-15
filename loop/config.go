@@ -13,19 +13,13 @@ import (
 	"github.com/teexue/nexakit/tool"
 )
 
-// ToolRegistry resolves tools by name.
-type ToolRegistry interface {
-	Get(name string) (tool.Tool, bool)
-	Definitions(names []string) ([]provider.ToolDefinition, error)
-}
-
 // ctxKeyParentEventChan is the unexported context key for the parent event channel.
 type ctxKeyParentEventChan struct{}
 
 // Config configures a single agent run.
 type Config struct {
 	Provider provider.Provider
-	Registry ToolRegistry
+	Registry tool.Registry
 	Agent    *agent.Agent
 	Session  *session.Session
 	Prompt   string
@@ -93,17 +87,6 @@ type Config struct {
 	Depth int
 	// Subagent holds process-wide nested-run limits from global settings.
 	Subagent SubagentLimits
-}
-
-// GetWorkDir returns the working directory from context, or empty string.
-// It delegates to tool, which owns the run-scoped tool context keys.
-func GetWorkDir(ctx context.Context) string {
-	return tool.GetWorkDir(ctx)
-}
-
-// WithWorkDir returns a context with the working directory set.
-func WithWorkDir(ctx context.Context, dir string) context.Context {
-	return tool.WithWorkDir(ctx, dir)
 }
 
 // GetParentEventChan returns the parent event channel from context, or nil.

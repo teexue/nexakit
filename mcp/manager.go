@@ -6,6 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/teexue/nexakit/mcp/protocol"
+	"github.com/teexue/nexakit/mcp/sse"
+	"github.com/teexue/nexakit/mcp/stdio"
 	"github.com/teexue/nexakit/tool"
 )
 
@@ -23,7 +26,7 @@ type ServerConfig struct {
 type Manager struct {
 	servers []ServerConfig
 	logger  *slog.Logger
-	client  ClientInfo
+	client  protocol.ClientInfo
 
 	mu      sync.Mutex
 	clients map[string]Client
@@ -31,7 +34,7 @@ type Manager struct {
 }
 
 // NewManager creates a Manager for the given server configs.
-func NewManager(servers []ServerConfig, logger *slog.Logger, client ClientInfo) *Manager {
+func NewManager(servers []ServerConfig, logger *slog.Logger, client protocol.ClientInfo) *Manager {
 	if logger == nil {
 		logger = slog.Default()
 	}
@@ -211,7 +214,7 @@ func (m *Manager) Reconnect(ctx context.Context, cfg ServerConfig) {
 func (m *Manager) createClient(cfg ServerConfig) Client {
 	switch cfg.Type {
 	case "stdio":
-		return NewStdioClient(StdioConfig{
+		return stdio.New(stdio.Config{
 			Name:          cfg.Name,
 			Command:       cfg.Command,
 			Args:          cfg.Args,
@@ -221,7 +224,7 @@ func (m *Manager) createClient(cfg ServerConfig) Client {
 			ClientVersion: m.client.Version,
 		})
 	case "sse":
-		return NewSSEClient(SSEConfig{
+		return sse.New(sse.Config{
 			Name:          cfg.Name,
 			URL:           cfg.URL,
 			Logger:        m.logger,

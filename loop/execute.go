@@ -117,7 +117,7 @@ func emitToolNotFound(ctx context.Context, hooks *hook.Chain, call provider.Tool
 
 // runTool executes one tool call with parent-event and call-id context.
 func runTool(ctx context.Context, t tool.Tool, call provider.ToolCall, out chan<- event.Event) (tool.Result, error) {
-	toolCtx := WithToolCallID(WithParentEventChan(ctx, out), call.ID)
+	toolCtx := tool.WithToolCallID(WithParentEventChan(ctx, out), call.ID)
 	return t.Execute(toolCtx, call.Arguments)
 }
 

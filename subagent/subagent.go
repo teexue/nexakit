@@ -7,16 +7,15 @@ package subagent
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"strconv"
 	"time"
 
 	"github.com/teexue/nexakit/agent"
 	"github.com/teexue/nexakit/event"
 	"github.com/teexue/nexakit/loop"
-	"github.com/teexue/nexakit/permission"
 	"github.com/teexue/nexakit/provider"
 	"github.com/teexue/nexakit/session"
+	"github.com/teexue/nexakit/tool"
 )
 
 const (
@@ -49,23 +48,10 @@ type Config struct {
 	Limits loop.SubagentLimits
 }
 
-// Deps provides the dependencies a sub-agent needs from its parent.
-type Deps struct {
-	AgentsDir       string
-	Registry        loop.ToolRegistry
-	NewProvider     func(a *agent.Agent) (provider.Provider, error)
-	Logger          *slog.Logger
-	Policy          permission.Policy
-	Approver        loop.Approver
-	Store           session.Store
-	WorkDir         string
-	Shell           string
-	UserID          string
-	ParentSessionID string
-	ParentAgent     *agent.Agent
-	LoadAgent       func(dir, name string) (*agent.Agent, error)
-	EnrichContext   func(context.Context, *agent.Agent) context.Context
-}
+// Deps provides the dependencies a sub-agent needs from its parent. It is an
+// alias of loop.Spawn: the parent/child wiring is defined exactly once, on the
+// loop side where the run context is built.
+type Deps = loop.Spawn
 
 // Result is the outcome of a sub-agent run.
 type Result struct {
@@ -119,7 +105,7 @@ func reserveSlot(ctx context.Context, cfg Config, parentOut chan<- event.Event, 
 		Type:       event.TypeSubAgentStart,
 		Tool:       ToolName,
 		Content:    cfg.Task,
-		ToolCallID: loop.ToolCallIDFrom(ctx),
+		ToolCallID: tool.ToolCallIDFrom(ctx),
 		Status:     StatusQueued,
 		Message:    strconv.Itoa(max),
 	})
@@ -137,7 +123,7 @@ func runWithLimits(ctx context.Context, cfg Config, deps Deps, parentOut chan<- 
 	}
 	sess := newChildSession(cfg, deps, a)
 	loopCfg := childLoopConfig(cfg, deps, a, p, sess)
-	callID := loop.ToolCallIDFrom(ctx)
+	callID := tool.ToolCallIDFrom(ctx)
 	emitEvent(ctx, parentOut, event.Event{
 		Type: event.TypeSubAgentStart, Tool: a.Name, Content: cfg.Task,
 		SessionID: sess.ID, ToolCallID: callID, Status: StatusRunning,
@@ -170,7 +156,7 @@ func childLoopConfig(cfg Config, deps Deps, a *agent.Agent, p provider.Provider,
 		Logger: deps.Logger, Policy: deps.Policy, Approver: deps.Approver,
 		Store: deps.Store, WorkDir: deps.WorkDir, Shell: deps.Shell,
 		AgentsDir: deps.AgentsDir, NewProvider: deps.NewProvider,
-		Depth: cfg.Depth, Source: "subagent", Subagent: cfg.Limits,
+		Depth: cfg.Depth, Source: session.SourceSubagent, Subagent: cfg.Limits,
 		LoadAgent: deps.LoadAgent, EnrichContext: deps.EnrichContext,
 	}
 }

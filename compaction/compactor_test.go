@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/provider/mock"
 )
 
 func TestNeedsCompaction(t *testing.T) {
@@ -268,7 +269,7 @@ func TestTruncationCompactor_TrialScalesWithCurrentTokens(t *testing.T) {
 }
 
 func TestSummarizingCompactor_UsesCurrentTokensForTrigger(t *testing.T) {
-	mock := &provider.MockProvider{Calls: [][]provider.MockStep{{{Text: "摘要"}}}}
+	mock := &mock.MockProvider{Calls: [][]mock.MockStep{{{Text: "摘要"}}}}
 	c := NewSummarizingCompactor(SummarizeConfig{
 		Provider: mock, Model: "m", TokenLimit: 100_000, KeepRecent: 1,
 	})
@@ -285,7 +286,7 @@ func TestSummarizingCompactor_UsesCurrentTokensForTrigger(t *testing.T) {
 }
 
 func TestSummarizingCompactor_IncrementalDelta(t *testing.T) {
-	mock := &provider.MockProvider{Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{Calls: [][]mock.MockStep{
 		{{Text: "第一版摘要"}},
 		{{Text: "第二版摘要"}},
 	}}
@@ -320,7 +321,7 @@ func TestSummarizingCompactor_IncrementalDelta(t *testing.T) {
 }
 
 func TestSummarizingCompactor_IncrementalNoDeltaReusesSummary(t *testing.T) {
-	mock := &provider.MockProvider{} // would error if Stream is called
+	mock := &mock.MockProvider{} // would error if Stream is called
 	c := NewSummarizingCompactor(SummarizeConfig{
 		Provider: mock, Model: "m", TokenLimit: 300, KeepRecent: 3,
 	})

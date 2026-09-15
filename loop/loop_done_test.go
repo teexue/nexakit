@@ -11,6 +11,7 @@ import (
 	"github.com/teexue/nexakit/event"
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/provider/mock"
 	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/session"
 )
@@ -25,12 +26,12 @@ func TestRunDoneCarriesContextWindow(t *testing.T) {
 		Provider:     "mock",
 		SystemPrompt: "test",
 		Tools:        []string{"echo"},
-		Model:        "deepseek-v4-pro",
+		Model:        "some-model",
 		MaxTurns:     3,
 	}
 
 	events, err := loop.Run(context.Background(), loop.Config{
-		Provider: provider.EchoThenReply("hello"),
+		Provider: mock.EchoThenReply("hello"),
 		Registry: reg,
 		Agent:    sc,
 		Session:  session.New(sc.Name),
@@ -46,8 +47,9 @@ func TestRunDoneCarriesContextWindow(t *testing.T) {
 	}
 	require.NotNil(t, done, "expected done event")
 	assert.Equal(t, "completed", done.Status)
-	// deepseek-v4-pro resolves to the official 1M context window.
-	assert.Equal(t, 1_000_000, done.ContextWindow)
+	// With no configured window and no provider introspection, the loop falls
+	// back to the conservative default so compaction stays active.
+	assert.Equal(t, provider.DefaultContextWindow, done.ContextWindow)
 }
 
 func TestDoneCarriesConfiguredContextWindow(t *testing.T) {
@@ -66,7 +68,7 @@ func TestDoneCarriesConfiguredContextWindow(t *testing.T) {
 	}
 
 	events, err := loop.Run(context.Background(), loop.Config{
-		Provider: provider.EchoThenReply("hello"),
+		Provider: mock.EchoThenReply("hello"),
 		Registry: reg,
 		Agent:    sc,
 		Session:  session.New(sc.Name),
@@ -142,8 +144,8 @@ func TestRunDoneTruncatedWhenHittingMaxTokens(t *testing.T) {
 		Tools: []string{"echo"}, Model: "unknown-model",
 		MaxTurns: 1, MaxTokens: 8000,
 	}
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{{
 			{Text: "cut off", OutputTokens: 8000, FinishReason: "length"},
 		}},
 	}

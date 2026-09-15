@@ -16,6 +16,7 @@ import (
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/permission"
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/provider/mock"
 	"github.com/teexue/nexakit/session"
 	"github.com/teexue/nexakit/subagent"
 	"github.com/teexue/nexakit/tool"
@@ -32,7 +33,7 @@ func mustDecode(s string) []byte {
 	return b
 }
 
-// stubRegistry is a minimal loop.ToolRegistry for these tests. It avoids
+// stubRegistry is a minimal tool.Registry for these tests. It avoids
 // importing the registry package, which now imports subagent (registering the
 // delegate_task tool), so the dependency would otherwise cycle.
 type stubRegistry struct{}
@@ -60,14 +61,14 @@ func TestDelegateTask_RunsSubAgent(t *testing.T) {
 	ctx := loop.WithSpawn(context.Background(), loop.Spawn{
 		Registry: reg,
 		NewProvider: func(*agent.Agent) (provider.Provider, error) {
-			return &provider.MockProvider{
-				Calls: [][]provider.MockStep{{{Text: "ok"}}},
+			return &mock.MockProvider{
+				Calls: [][]mock.MockStep{{{Text: "ok"}}},
 			}, nil
 		},
-		Policy:    permission.AllowAllPolicy{},
-		Agent:     parent,
-		UserID:    "usr",
-		SessionID: sess.ID,
+		Policy:          permission.AllowAllPolicy{},
+		ParentAgent:     parent,
+		UserID:          "usr",
+		ParentSessionID: sess.ID,
 	})
 	ctx = loop.WithParentEventChan(ctx, make(chan event.Event, 8))
 
@@ -89,13 +90,13 @@ func TestDelegateTask_ChildCannotNest(t *testing.T) {
 	ctx := loop.WithSpawn(context.Background(), loop.Spawn{
 		Registry: reg,
 		NewProvider: func(*agent.Agent) (provider.Provider, error) {
-			return &provider.MockProvider{
-				Calls: [][]provider.MockStep{{{Text: "ok"}}},
+			return &mock.MockProvider{
+				Calls: [][]mock.MockStep{{{Text: "ok"}}},
 			}, nil
 		},
-		Policy: permission.AllowAllPolicy{},
-		Agent:  parent,
-		Depth:  1,
+		Policy:      permission.AllowAllPolicy{},
+		ParentAgent: parent,
+		Depth:       1,
 		Subagent: loop.SubagentLimits{
 			Enabled: true, MaxTurns: 5, MaxDepth: 1,
 		},
@@ -118,13 +119,13 @@ func TestDelegateTask_LoadsImages(t *testing.T) {
 	ctx := loop.WithSpawn(context.Background(), loop.Spawn{
 		Registry: reg,
 		NewProvider: func(*agent.Agent) (provider.Provider, error) {
-			return &provider.MockProvider{
-				Calls: [][]provider.MockStep{{{Text: "saw image"}}},
+			return &mock.MockProvider{
+				Calls: [][]mock.MockStep{{{Text: "saw image"}}},
 			}, nil
 		},
-		Policy:  permission.AllowAllPolicy{},
-		Agent:   parent,
-		WorkDir: dir,
+		Policy:      permission.AllowAllPolicy{},
+		ParentAgent: parent,
+		WorkDir:     dir,
 	})
 	ctx = loop.WithParentEventChan(ctx, make(chan event.Event, 8))
 
@@ -146,11 +147,11 @@ func TestDelegateTask_BadImage(t *testing.T) {
 	ctx := loop.WithSpawn(context.Background(), loop.Spawn{
 		Registry: reg,
 		NewProvider: func(*agent.Agent) (provider.Provider, error) {
-			return &provider.MockProvider{Calls: [][]provider.MockStep{{{Text: "ok"}}}}, nil
+			return &mock.MockProvider{Calls: [][]mock.MockStep{{{Text: "ok"}}}}, nil
 		},
-		Policy:  permission.AllowAllPolicy{},
-		Agent:   parent,
-		WorkDir: dir,
+		Policy:      permission.AllowAllPolicy{},
+		ParentAgent: parent,
+		WorkDir:     dir,
 	})
 	ctx = loop.WithParentEventChan(ctx, make(chan event.Event, 8))
 	_, err := subagent.DelegateTask{}.Execute(ctx, json.RawMessage(`{"task":"x","images":["missing.png"]}`))

@@ -9,10 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/provider/mock"
 )
 
 func TestSummarizingCompactor_NoCompactionNeeded(t *testing.T) {
-	mock := &provider.MockProvider{}
+	mock := &mock.MockProvider{}
 	c := NewSummarizingCompactor(SummarizeConfig{
 		Provider: mock, Model: "m", TokenLimit: 100_000, KeepRecent: 10,
 	})
@@ -28,8 +29,8 @@ func TestSummarizingCompactor_NoCompactionNeeded(t *testing.T) {
 }
 
 func TestSummarizingCompactor_SummarizesOldTurns(t *testing.T) {
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{{{Text: "用户想升级依赖并重新构建"}}},
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{{{Text: "用户想升级依赖并重新构建"}}},
 	}
 	c := NewSummarizingCompactor(SummarizeConfig{
 		Provider: mock, Model: "m", TokenLimit: 300, KeepRecent: 4,

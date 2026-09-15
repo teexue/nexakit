@@ -24,7 +24,7 @@ func resolveContextWindow(ctx context.Context, cfg Config) int {
 	if r, ok := cfg.Provider.(provider.ContextResolver); ok {
 		return r.ResolveContextWindow(ctx, cfg.Agent.Model, configured)
 	}
-	return provider.EffectiveContextWindow(cfg.Agent.Model, configured)
+	return provider.EffectiveContextWindow(configured)
 }
 
 type compactHint struct {
@@ -85,7 +85,7 @@ func compactIfNeeded(ctx context.Context, cfg Config, out chan<- event.Event, hi
 	s := resolveCompactionSettings(cfg.Agent.Compaction, cfg.Agent.Model)
 	// Reserve tokens for the compaction summary output and the next
 	// completion: min(maxOutput, 20K), aligning with Claude Code's budget.
-	maxOut := provider.EffectiveMaxOutput(cfg.Agent.Model, cfg.Agent.MaxTokens)
+	maxOut := provider.EffectiveMaxOutput(cfg.Agent.MaxTokens)
 	reserve := compaction.SummaryBudget(maxOut)
 	tokenLimit := compaction.ResolveTokenLimit(hint.window, reserve, s.ratio)
 	if tokenLimit <= 0 && s.maxMessages <= 0 {

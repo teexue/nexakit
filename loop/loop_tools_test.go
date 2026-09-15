@@ -11,6 +11,7 @@ import (
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/permission"
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/provider/mock"
 	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/session"
 )
@@ -30,8 +31,8 @@ func TestRunApproval_Approved(t *testing.T) {
 	}
 
 	args, _ := json.Marshal(map[string]string{"message": "hi"})
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{
 			{{ToolCalls: []provider.ToolCall{{ID: "tc-1", Name: "echo", Arguments: args}}}},
 			{{Text: "done"}},
 		},
@@ -102,8 +103,8 @@ func TestRunApproval_Denied(t *testing.T) {
 	}
 
 	args, _ := json.Marshal(map[string]string{"message": "hi"})
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{
 			{{ToolCalls: []provider.ToolCall{{ID: "tc-1", Name: "echo", Arguments: args}}}},
 			{{Text: "done"}},
 		},

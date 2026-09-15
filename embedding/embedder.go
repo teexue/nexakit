@@ -7,6 +7,15 @@ import (
 	"log/slog"
 )
 
+const (
+	// BackendOpenAI selects an OpenAI-compatible /embeddings HTTP API (API key,
+	// base URL, and model required). Used when backend is empty.
+	BackendOpenAI = "openai"
+	// BackendOllama selects a local Ollama embeddings endpoint (no API key;
+	// defaults to http://127.0.0.1:11434).
+	BackendOllama = "ollama"
+)
+
 // Embedder turns text into dense vectors.
 type Embedder interface {
 	// Embed returns one vector per input text, in the same order.
@@ -41,15 +50,6 @@ type ConfigView struct {
 	Dimensions int    `json:"dimensions,omitempty"`
 	HasAPIKey  bool   `json:"has_api_key"`
 }
-
-const (
-	// BackendOpenAI selects an OpenAI-compatible /embeddings HTTP API (API key,
-	// base URL, and model required). Used when backend is empty.
-	BackendOpenAI = "openai"
-	// BackendOllama selects a local Ollama embeddings endpoint (no API key;
-	// defaults to http://127.0.0.1:11434).
-	BackendOllama = "ollama"
-)
 
 // Validate checks Config fields after Normalize.
 func (c Config) Validate() error {

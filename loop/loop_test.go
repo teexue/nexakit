@@ -13,6 +13,7 @@ import (
 	"github.com/teexue/nexakit/event"
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/provider/mock"
 	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/session"
 	"github.com/teexue/nexakit/tool"
@@ -50,7 +51,7 @@ func TestRunWithMockProvider(t *testing.T) {
 	}
 
 	events, err := loop.Run(context.Background(), loop.Config{
-		Provider: provider.EchoThenReply("hello"),
+		Provider: mock.EchoThenReply("hello"),
 		Registry: reg,
 		Agent:    sc,
 		Session:  session.New(sc.Name),
@@ -106,8 +107,8 @@ func TestRunUnknownTool(t *testing.T) {
 	}
 
 	args := []byte(`{"message":"x"}`)
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{
 			{{
 				ToolCalls: []provider.ToolCall{{ID: "1", Name: "missing_tool", Arguments: args}},
 			}},
@@ -154,8 +155,8 @@ func TestRunSerialMode(t *testing.T) {
 	}
 
 	args, _ := json.Marshal(map[string]string{"message": "hi"})
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{
 			{{
 				ToolCalls: []provider.ToolCall{
 					{ID: "1", Name: "echo", Arguments: args},
@@ -203,8 +204,8 @@ func TestRunMaxTurnsExceeded(t *testing.T) {
 	}
 
 	args, _ := json.Marshal(map[string]string{"message": "x"})
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{
 			{{ToolCalls: []provider.ToolCall{{ID: "1", Name: "echo", Arguments: args}}}},
 		},
 	}
@@ -242,8 +243,8 @@ func TestRunMaxTurnsUnlimitedContinues(t *testing.T) {
 	}
 
 	args, _ := json.Marshal(map[string]string{"message": "x"})
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{
 			{{ToolCalls: []provider.ToolCall{{ID: "1", Name: "echo", Arguments: args}}}},
 			{{ToolCalls: []provider.ToolCall{{ID: "2", Name: "echo", Arguments: args}}}},
 			{{Text: "done after tools"}},
@@ -291,8 +292,8 @@ func TestRunTextOnlyResponse(t *testing.T) {
 		MaxTurns:     5,
 	}
 
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{
 			{{Text: "no tools needed"}},
 		},
 	}
@@ -334,8 +335,8 @@ func TestRunReasoningDeltaEvents(t *testing.T) {
 	}
 
 	args, _ := json.Marshal(map[string]string{"message": "hi"})
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{
 			{{
 				Reasoning: "let me think about this",
 				ToolCalls: []provider.ToolCall{{ID: "1", Name: "echo", Arguments: args}},

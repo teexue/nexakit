@@ -10,6 +10,7 @@ import (
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/permission"
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/provider/mock"
 	"github.com/teexue/nexakit/session"
 	"github.com/teexue/nexakit/tool"
 )
@@ -27,7 +28,7 @@ func (t *testTool) Execute(_ context.Context, _ json.RawMessage) (tool.Result, e
 	return tool.Result{Output: json.RawMessage(`"ok"`)}, nil
 }
 
-// stubRegistry is a tiny loop.ToolRegistry implementation. The real registry
+// stubRegistry is a tiny tool.Registry implementation. The real registry
 // package imports subagent (to register the delegate_task tool), so using it
 // here would create an import cycle; these tests only need Get/Definitions.
 type stubRegistry struct {
@@ -63,8 +64,8 @@ func setupDeps() Deps {
 		AgentsDir: "/tmp/nonexistent-agents",
 		Registry:  reg,
 		NewProvider: func(a *agent.Agent) (provider.Provider, error) {
-			return &provider.MockProvider{
-				Calls: [][]provider.MockStep{
+			return &mock.MockProvider{
+				Calls: [][]mock.MockStep{
 					{{Text: "sub-agent response"}},
 				},
 			}, nil

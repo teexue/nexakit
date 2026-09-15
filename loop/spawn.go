@@ -8,29 +8,31 @@ import (
 	"github.com/teexue/nexakit/permission"
 	"github.com/teexue/nexakit/provider"
 	"github.com/teexue/nexakit/session"
+	"github.com/teexue/nexakit/tool"
 )
 
 type ctxKeySpawn struct{}
 
 // Spawn is the nested-run wiring copied onto context so tools can start a
-// child loop.Run without holding a shared mutable tool instance.
+// child loop.Run without holding a shared mutable tool instance. subagent.Deps
+// is an alias so the parent/child wiring is defined exactly once.
 type Spawn struct {
-	AgentsDir   string
-	NewProvider func(a *agent.Agent) (provider.Provider, error)
-	Registry    ToolRegistry
-	Logger      *slog.Logger
-	Policy      permission.Policy
-	Approver    Approver
-	Store       session.Store
-	WorkDir     string
-	Shell       string
-	Depth       int
-	UserID      string
-	SessionID   string
-	Agent       *agent.Agent
-	Subagent    SubagentLimits
-	LoadAgent   func(dir, name string) (*agent.Agent, error)
-	Enrich      func(context.Context, *agent.Agent) context.Context
+	AgentsDir       string
+	NewProvider     func(a *agent.Agent) (provider.Provider, error)
+	Registry        tool.Registry
+	Logger          *slog.Logger
+	Policy          permission.Policy
+	Approver        Approver
+	Store           session.Store
+	WorkDir         string
+	Shell           string
+	Depth           int
+	UserID          string
+	ParentSessionID string
+	ParentAgent     *agent.Agent
+	Subagent        SubagentLimits
+	LoadAgent       func(dir, name string) (*agent.Agent, error)
+	EnrichContext   func(context.Context, *agent.Agent) context.Context
 }
 
 // WithSpawn returns a context carrying nested-run wiring.
@@ -51,21 +53,21 @@ func spawnFromConfig(cfg Config) Spawn {
 		sessID = cfg.Session.ID
 	}
 	return Spawn{
-		AgentsDir:   cfg.AgentsDir,
-		NewProvider: cfg.NewProvider,
-		Registry:    cfg.Registry,
-		Logger:      cfg.Logger,
-		Policy:      cfg.Policy,
-		Approver:    cfg.Approver,
-		Store:       cfg.Store,
-		WorkDir:     cfg.WorkDir,
-		Shell:       cfg.Shell,
-		Depth:       cfg.Depth,
-		UserID:      userID,
-		SessionID:   sessID,
-		Agent:       cfg.Agent,
-		Subagent:    cfg.Subagent,
-		LoadAgent:   cfg.LoadAgent,
-		Enrich:      cfg.EnrichContext,
+		AgentsDir:       cfg.AgentsDir,
+		NewProvider:     cfg.NewProvider,
+		Registry:        cfg.Registry,
+		Logger:          cfg.Logger,
+		Policy:          cfg.Policy,
+		Approver:        cfg.Approver,
+		Store:           cfg.Store,
+		WorkDir:         cfg.WorkDir,
+		Shell:           cfg.Shell,
+		Depth:           cfg.Depth,
+		UserID:          userID,
+		ParentSessionID: sessID,
+		ParentAgent:     cfg.Agent,
+		Subagent:        cfg.Subagent,
+		LoadAgent:       cfg.LoadAgent,
+		EnrichContext:   cfg.EnrichContext,
 	}
 }

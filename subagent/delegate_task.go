@@ -8,6 +8,7 @@ import (
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/provider"
 	"github.com/teexue/nexakit/tool"
+	"github.com/teexue/nexakit/tool/builtin"
 )
 
 // DelegateTask is a built-in tool that delegates a task to a sub-agent.
@@ -82,7 +83,7 @@ func (DelegateTask) Execute(ctx context.Context, input json.RawMessage) (tool.Re
 		Images:    images,
 		Depth:     spawn.Depth + 1,
 		Limits:    spawn.Subagent,
-	}, spawnDeps(spawn), loop.GetParentEventChan(ctx))
+	}, spawn, loop.GetParentEventChan(ctx))
 	if err != nil {
 		return tool.Result{}, err
 	}
@@ -100,7 +101,7 @@ func loadDelegateImages(ctx context.Context, workDir string, paths []string) ([]
 	if len(paths) == 0 {
 		return nil, nil
 	}
-	reader := tool.ReadImage{WorkDir: workDir}
+	reader := builtin.ReadImage{WorkDir: workDir}
 	out := make([]provider.ContentPart, 0, len(paths))
 	for _, p := range paths {
 		raw, _ := json.Marshal(map[string]string{"path": p})
@@ -111,23 +112,4 @@ func loadDelegateImages(ctx context.Context, workDir string, paths []string) ([]
 		out = append(out, res.ContentParts...)
 	}
 	return out, nil
-}
-
-func spawnDeps(spawn loop.Spawn) Deps {
-	return Deps{
-		AgentsDir:       spawn.AgentsDir,
-		Registry:        spawn.Registry,
-		NewProvider:     spawn.NewProvider,
-		Logger:          spawn.Logger,
-		Policy:          spawn.Policy,
-		Approver:        spawn.Approver,
-		Store:           spawn.Store,
-		WorkDir:         spawn.WorkDir,
-		Shell:           spawn.Shell,
-		UserID:          spawn.UserID,
-		ParentSessionID: spawn.SessionID,
-		ParentAgent:     spawn.Agent,
-		LoadAgent:       spawn.LoadAgent,
-		EnrichContext:   spawn.Enrich,
-	}
 }

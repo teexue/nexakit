@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/teexue/nexakit/embedding"
+	mock "github.com/teexue/nexakit/embedding/mock"
 )
 
 func TestOpenAIEmbed(t *testing.T) {
@@ -101,7 +102,7 @@ func TestOllamaEmbedLegacy(t *testing.T) {
 }
 
 func TestMockEmbedder(t *testing.T) {
-	m := &embedding.MockEmbedder{Dim: 4}
+	m := &mock.MockEmbedder{Dim: 4}
 	a, err := m.Embed(context.Background(), []string{"abc"})
 	require.NoError(t, err)
 	b, err := m.Embed(context.Background(), []string{"abc"})

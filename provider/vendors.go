@@ -1,10 +1,13 @@
 package provider
 
-// APIStyleOpenAIModelsPath is the default model-list path for OpenAI-style vendors.
-const APIStyleOpenAIModelsPath = "/models"
-
-// APIStyleAnthropicModelsPath is the default model-list path for Anthropic-style vendors.
-const APIStyleAnthropicModelsPath = "/v1/models"
+const (
+	// APIStyleOpenAIModelsPath is the default model-list path for OpenAI-style vendors.
+	APIStyleOpenAIModelsPath = "/models"
+	// APIStyleAnthropicModelsPath is the default model-list path for Anthropic-style vendors.
+	APIStyleAnthropicModelsPath = "/v1/models"
+	// APIStyleOllamaModelsPath is the default model-list path for Ollama-style vendors.
+	APIStyleOllamaModelsPath = "/api/tags"
+)
 
 // DefaultModelsPathFor returns the default model-list path for an API style.
 func DefaultModelsPathFor(style APIStyle) string {
@@ -17,9 +20,6 @@ func DefaultModelsPathFor(style APIStyle) string {
 		return APIStyleOpenAIModelsPath
 	}
 }
-
-// APIStyleOllamaModelsPath is the default model-list path for Ollama-style vendors.
-const APIStyleOllamaModelsPath = "/api/tags"
 
 // Vendor is a built-in provider preset with sensible defaults.
 // Dual-protocol vendors set both OpenAIBaseURL and AnthropicBaseURL; the
@@ -125,7 +125,7 @@ var builtInVendors = []Vendor{
 		Name: "ollama", DisplayName: "Ollama (local)",
 		DefaultModel: "llama3.1", APIKeyEnv: "",
 		APIStyle: StyleOllama, SupportedStyles: []APIStyle{StyleOllama},
-		OpenAIBaseURL: defaultOllamaBaseURL,
+		OpenAIBaseURL: DefaultOllamaBaseURL,
 		Vision:        true,
 	},
 	{

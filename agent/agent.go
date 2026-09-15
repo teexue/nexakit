@@ -6,6 +6,21 @@ package agent
 import (
 	"github.com/teexue/nexakit/compaction"
 	"github.com/teexue/nexakit/permission"
+	"github.com/teexue/nexakit/provider"
+)
+
+const (
+	defaultMaxParallel = 4
+)
+
+// Tool execution modes. These are the canonical string values for
+// ToolExecution.Mode; the loop and validation both reference them so the
+// wire/config values live in exactly one place.
+const (
+	// ToolExecParallel runs independent tool calls concurrently (the default).
+	ToolExecParallel = "parallel"
+	// ToolExecSerial runs tool calls one at a time.
+	ToolExecSerial = "serial"
 )
 
 // ToolExecution configures tool execution strategy.
@@ -54,16 +69,21 @@ type OptimizeConfig struct {
 
 // Agent configures agent behavior for a production use case.
 type Agent struct {
-	Version       int
-	ID            string
-	Name          string
-	Provider      string
-	SystemPrompt  string
-	Tools         []string
-	Skills        []string
-	Model         string
-	MaxTurns      int // 0 = unlimited until model stops
-	MaxTokens     int
+	Version      int
+	ID           string
+	Name         string
+	Provider     string
+	SystemPrompt string
+	Tools        []string
+	Skills       []string
+	Model        string
+	MaxTurns     int // 0 = unlimited until model stops
+	MaxTokens    int
+	// Thinking optionally sets the per-request reasoning depth for
+	// OpenAI-compatible thinking extensions. The agent's own config, not the
+	// provider profile, should own this setting; nil lets the provider-level
+	// configuration (or the model default) apply.
+	Thinking      *provider.ThinkingConfig
 	ToolExecution *ToolExecution
 	Permissions   *permission.Permissions
 	MCPServers    []MCPServerConfig
@@ -75,20 +95,6 @@ type Agent struct {
 	ProjectContext string
 	SkillsContext  string
 }
-
-const (
-	defaultMaxParallel = 4
-)
-
-// Tool execution modes. These are the canonical string values for
-// ToolExecution.Mode; the loop and validation both reference them so the
-// wire/config values live in exactly one place.
-const (
-	// ToolExecParallel runs independent tool calls concurrently (the default).
-	ToolExecParallel = "parallel"
-	// ToolExecSerial runs tool calls one at a time.
-	ToolExecSerial = "serial"
-)
 
 // ToolExecMode returns the configured tool execution mode with defaults.
 func (a *Agent) ToolExecMode() string {

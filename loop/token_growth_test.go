@@ -48,8 +48,8 @@ func TestTokenGrowthSimulated(t *testing.T) {
 		newCum += estimateMsgTokens(newSession.GetMessages())
 
 		// Apply compaction on the new session every turn (as compactIfNeeded does).
-		window := provider.EffectiveContextWindow("unknown-model", 0)
-		reserve := provider.EffectiveMaxOutput("unknown-model", 0)
+		window := provider.EffectiveContextWindow(0)
+		reserve := provider.EffectiveMaxOutput(0)
 		limit := compaction.ResolveTokenLimit(window, reserve, 0)
 		if limit > 0 {
 			cmp := compaction.NewCompactor(compaction.Config{

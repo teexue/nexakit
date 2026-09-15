@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/teexue/nexakit/mcp/protocol"
 	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/tool"
 )
 
 func TestManager_NoServers(t *testing.T) {
-	m := NewManager(nil, nil, ClientInfo{})
+	m := NewManager(nil, nil, protocol.ClientInfo{})
 	tools := m.ConnectAll(context.Background())
 	if len(tools) != 0 {
 		t.Errorf("expected 0 tools, got %d", len(tools))
@@ -22,7 +23,7 @@ func TestManager_ConnectAll_FailedServer(t *testing.T) {
 	servers := []ServerConfig{
 		{Name: "bad", Type: "stdio", Command: "/nonexistent/binary"},
 	}
-	m := NewManager(servers, nil, ClientInfo{})
+	m := NewManager(servers, nil, protocol.ClientInfo{})
 	tools := m.ConnectAll(context.Background())
 
 	if len(tools) != 0 {
@@ -34,7 +35,7 @@ func TestManager_ConnectAll_FailedServer(t *testing.T) {
 }
 
 func TestManager_GetTool_NotFound(t *testing.T) {
-	m := NewManager(nil, nil, ClientInfo{})
+	m := NewManager(nil, nil, protocol.ClientInfo{})
 	_, ok := m.GetTool("nonexistent")
 	if ok {
 		t.Error("expected false for nonexistent tool")
@@ -42,12 +43,12 @@ func TestManager_GetTool_NotFound(t *testing.T) {
 }
 
 func TestManager_Close(t *testing.T) {
-	m := NewManager(nil, nil, ClientInfo{})
+	m := NewManager(nil, nil, protocol.ClientInfo{})
 	m.Close() // should not panic
 }
 
 func TestManager_ToolNames_Empty(t *testing.T) {
-	m := NewManager(nil, nil, ClientInfo{})
+	m := NewManager(nil, nil, protocol.ClientInfo{})
 	names := m.ToolNames()
 	if len(names) != 0 {
 		t.Errorf("expected empty, got %v", names)
@@ -55,7 +56,7 @@ func TestManager_ToolNames_Empty(t *testing.T) {
 }
 
 func TestManager_createClient_UnknownType(t *testing.T) {
-	m := NewManager(nil, nil, ClientInfo{})
+	m := NewManager(nil, nil, protocol.ClientInfo{})
 	client := m.createClient(ServerConfig{Name: "x", Type: "unknown"})
 	if client != nil {
 		t.Error("expected nil for unknown type")

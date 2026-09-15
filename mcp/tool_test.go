@@ -4,13 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+
+	"github.com/teexue/nexakit/mcp/protocol"
+	"github.com/teexue/nexakit/provider"
 )
 
 // mockClient implements Client for testing.
 type mockClient struct {
 	name       string
-	tools      []ToolDefinition
-	callResult *CallToolResult
+	tools      []provider.ToolDefinition
+	callResult *protocol.CallToolResult
 	callErr    error
 	closed     bool
 }
@@ -18,15 +21,15 @@ type mockClient struct {
 func (m *mockClient) Connect(_ context.Context) error { return nil }
 func (m *mockClient) Close() error                    { m.closed = true; return nil }
 func (m *mockClient) Name() string                    { return m.name }
-func (m *mockClient) ListTools(_ context.Context) ([]ToolDefinition, error) {
+func (m *mockClient) ListTools(_ context.Context) ([]provider.ToolDefinition, error) {
 	return m.tools, nil
 }
-func (m *mockClient) CallTool(_ context.Context, _ string, _ map[string]any) (*CallToolResult, error) {
+func (m *mockClient) CallTool(_ context.Context, _ string, _ map[string]any) (*protocol.CallToolResult, error) {
 	return m.callResult, m.callErr
 }
 
 func TestExternalTool_Name(t *testing.T) {
-	def := ToolDefinition{Name: "my_tool", Description: "A tool", InputSchema: map[string]any{"type": "object"}}
+	def := provider.ToolDefinition{Name: "my_tool", Description: "A tool", Parameters: map[string]any{"type": "object"}}
 	client := &mockClient{name: "test"}
 	tool := NewExternalTool(def, client)
 
@@ -36,7 +39,7 @@ func TestExternalTool_Name(t *testing.T) {
 }
 
 func TestExternalTool_Description(t *testing.T) {
-	def := ToolDefinition{Name: "t", Description: "desc", InputSchema: map[string]any{}}
+	def := provider.ToolDefinition{Name: "t", Description: "desc", Parameters: map[string]any{}}
 	tool := NewExternalTool(def, &mockClient{})
 
 	if tool.Description() != "desc" {
@@ -46,7 +49,7 @@ func TestExternalTool_Description(t *testing.T) {
 
 func TestExternalTool_InputSchema(t *testing.T) {
 	schema := map[string]any{"type": "object", "properties": map[string]any{"x": map[string]any{"type": "string"}}}
-	def := ToolDefinition{Name: "t", InputSchema: schema}
+	def := provider.ToolDefinition{Name: "t", Parameters: schema}
 	tool := NewExternalTool(def, &mockClient{})
 
 	got := tool.InputSchema()
@@ -58,11 +61,11 @@ func TestExternalTool_InputSchema(t *testing.T) {
 func TestExternalTool_Execute(t *testing.T) {
 	client := &mockClient{
 		name: "test",
-		callResult: &CallToolResult{
-			Content: []Content{{Type: "text", Text: "hello world"}},
+		callResult: &protocol.CallToolResult{
+			Content: []protocol.Content{{Type: "text", Text: "hello world"}},
 		},
 	}
-	def := ToolDefinition{Name: "echo", InputSchema: map[string]any{}}
+	def := provider.ToolDefinition{Name: "echo", Parameters: map[string]any{}}
 	tool := NewExternalTool(def, client)
 
 	result, err := tool.Execute(context.Background(), json.RawMessage(`{"msg":"hi"}`))
@@ -81,11 +84,11 @@ func TestExternalTool_Execute(t *testing.T) {
 
 func TestExternalTool_Execute_EmptyInput(t *testing.T) {
 	client := &mockClient{
-		callResult: &CallToolResult{
-			Content: []Content{{Type: "text", Text: "ok"}},
+		callResult: &protocol.CallToolResult{
+			Content: []protocol.Content{{Type: "text", Text: "ok"}},
 		},
 	}
-	def := ToolDefinition{Name: "t", InputSchema: map[string]any{}}
+	def := provider.ToolDefinition{Name: "t", Parameters: map[string]any{}}
 	tool := NewExternalTool(def, client)
 
 	result, err := tool.Execute(context.Background(), nil)
@@ -99,9 +102,9 @@ func TestExternalTool_Execute_EmptyInput(t *testing.T) {
 
 func TestExternalTool_Execute_Error(t *testing.T) {
 	client := &mockClient{
-		callErr: &RPCError{Code: -1, Message: "tool failed"},
+		callErr: &protocol.RPCError{Code: -1, Message: "tool failed"},
 	}
-	def := ToolDefinition{Name: "t", InputSchema: map[string]any{}}
+	def := provider.ToolDefinition{Name: "t", Parameters: map[string]any{}}
 	tool := NewExternalTool(def, client)
 
 	_, err := tool.Execute(context.Background(), nil)
@@ -111,9 +114,9 @@ func TestExternalTool_Execute_Error(t *testing.T) {
 }
 
 func TestExternalTools(t *testing.T) {
-	defs := []ToolDefinition{
-		{Name: "a", Description: "A", InputSchema: map[string]any{}},
-		{Name: "b", Description: "B", InputSchema: map[string]any{}},
+	defs := []provider.ToolDefinition{
+		{Name: "a", Description: "A", Parameters: map[string]any{}},
+		{Name: "b", Description: "B", Parameters: map[string]any{}},
 	}
 	client := &mockClient{name: "test"}
 	tools := ExternalTools(defs, client)
@@ -127,8 +130,8 @@ func TestExternalTools(t *testing.T) {
 }
 
 func TestCallToolResult_MarshalText(t *testing.T) {
-	result := &CallToolResult{
-		Content: []Content{
+	result := &protocol.CallToolResult{
+		Content: []protocol.Content{
 			{Type: "text", Text: "hello "},
 			{Type: "text", Text: "world"},
 			{Type: "image", Text: "ignored"},

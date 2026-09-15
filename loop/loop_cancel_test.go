@@ -9,6 +9,7 @@ import (
 	"github.com/teexue/nexakit/event"
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/provider/mock"
 	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/session"
 )
@@ -30,8 +31,8 @@ func TestRunContextCancellation(t *testing.T) {
 	args, _ := json.Marshal(map[string]string{"message": "x"})
 	// Use a mock that blocks on the second Stream call, so the loop
 	// is guaranteed to be waiting when we cancel the context.
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{
 			{{ToolCalls: []provider.ToolCall{{ID: "1", Name: "echo", Arguments: args}}}},
 		},
 		BlockOnStream: true,

@@ -13,6 +13,7 @@ import (
 	"github.com/teexue/nexakit/agent"
 	"github.com/teexue/nexakit/loop"
 	"github.com/teexue/nexakit/provider"
+	"github.com/teexue/nexakit/provider/mock"
 	"github.com/teexue/nexakit/registry"
 	"github.com/teexue/nexakit/session"
 	"github.com/teexue/nexakit/tool"
@@ -41,8 +42,8 @@ func TestRun_IdenticalToolFailStreakHintsOnThird(t *testing.T) {
 	reg.MustRegister(boomTool{})
 	args, _ := json.Marshal(map[string]string{"path": "a"})
 	call := provider.ToolCall{ID: "c1", Name: "boom", Arguments: args}
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{
 			{{ToolCalls: []provider.ToolCall{call}}},
 			{{ToolCalls: []provider.ToolCall{{ID: "c2", Name: "boom", Arguments: args}}}},
 			{{ToolCalls: []provider.ToolCall{{ID: "c3", Name: "boom", Arguments: args}}}},
@@ -76,8 +77,8 @@ func TestRun_DifferentArgsDoNotHint(t *testing.T) {
 	a1, _ := json.Marshal(map[string]string{"path": "a"})
 	a2, _ := json.Marshal(map[string]string{"path": "b"})
 	a3, _ := json.Marshal(map[string]string{"path": "c"})
-	mock := &provider.MockProvider{
-		Calls: [][]provider.MockStep{
+	mock := &mock.MockProvider{
+		Calls: [][]mock.MockStep{
 			{{ToolCalls: []provider.ToolCall{{ID: "1", Name: "boom", Arguments: a1}}}},
 			{{ToolCalls: []provider.ToolCall{{ID: "2", Name: "boom", Arguments: a2}}}},
 			{{ToolCalls: []provider.ToolCall{{ID: "3", Name: "boom", Arguments: a3}}}},

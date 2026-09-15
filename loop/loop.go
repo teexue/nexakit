@@ -188,7 +188,7 @@ func executeTurn(ctx context.Context, env runEnv, turn, totalInput, totalOutput 
 			env.cfg.Session.GetMessages(), env.cfg.imageKeepFrom,
 		),
 		Tools: env.toolDefs, MaxTokens: env.cfg.Agent.MaxTokens,
-		ContextWindow: env.window,
+		ContextWindow: env.window, Thinking: env.cfg.Agent.Thinking,
 	})
 	if err != nil {
 		forceEmit(env.out, event.Event{Type: event.TypeError, Code: "provider_error", Message: err.Error()})
@@ -435,7 +435,7 @@ type doneStats struct {
 }
 
 func completedDoneEvent(env runEnv, in doneInputs) event.Event {
-	maxOut := provider.EffectiveMaxOutput(env.cfg.Agent.Model, env.cfg.Agent.MaxTokens)
+	maxOut := provider.EffectiveMaxOutput(env.cfg.Agent.MaxTokens)
 	return event.Event{
 		Type: event.TypeDone, Status: "completed", Turns: in.turn,
 		InputTokens: in.tokens.input, OutputTokens: in.tokens.output,

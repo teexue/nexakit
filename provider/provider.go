@@ -85,6 +85,11 @@ type Request struct {
 	// (e.g. Ollama's num_ctx) should use it to size that context so the
 	// server's actual limit matches the value the loop uses for compaction.
 	ContextWindow int
+	// Thinking overrides the provider-level thinking configuration for this
+	// request (e.g. an agent that needs a different reasoning depth than the
+	// vendor profile). nil = not specified; the provider falls back to its
+	// constructor-time configuration.
+	Thinking *ThinkingConfig
 }
 
 // Chunk is a streaming response fragment.
