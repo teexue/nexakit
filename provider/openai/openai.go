@@ -20,6 +20,8 @@ type Config struct {
 	Thinking   *provider.ThinkingConfig
 	ModelsPath string
 	Vision     bool
+	// Vendor is the catalog profile name, used when the base URL is a proxy.
+	Vendor string
 }
 
 // OpenAI implements Provider against OpenAI-compatible chat completions APIs.
@@ -30,6 +32,7 @@ type OpenAI struct {
 	thinking   *provider.ThinkingConfig
 	modelsPath string
 	vision     bool
+	vendor     string
 }
 
 // New creates an OpenAI-compatible provider.
@@ -52,7 +55,7 @@ func New(cfg Config) (*OpenAI, error) {
 	return &OpenAI{
 		apiKey: cfg.APIKey, baseURL: strings.TrimRight(baseURL, "/"),
 		client: client, thinking: cfg.Thinking,
-		modelsPath: modelsPath, vision: cfg.Vision,
+		modelsPath: modelsPath, vision: cfg.Vision, vendor: cfg.Vendor,
 	}, nil
 }
 
@@ -113,7 +116,15 @@ type openAIRequest struct {
 	Stream        bool                 `json:"stream"`
 	StreamOptions *openAIStreamOptions `json:"stream_options,omitempty"`
 	MaxTokens     int                  `json:"max_tokens,omitempty"`
-	Thinking      *openAIThinking      `json:"thinking,omitempty"`
+	Thinking        *openAIThinking      `json:"thinking,omitempty"`
+	ReasoningEffort string               `json:"reasoning_effort,omitempty"`
+	EnableThinking  *bool                `json:"enable_thinking,omitempty"`
+	ThinkingBudget  int                  `json:"thinking_budget,omitempty"`
+	Reasoning       *openAIReasoning     `json:"reasoning,omitempty"`
+}
+
+type openAIReasoning struct {
+	Effort string `json:"effort,omitempty"`
 }
 
 type openAIMessage struct {
@@ -268,6 +279,9 @@ func (o *OpenAI) buildRequest(req provider.Request) openAIRequest {
 	thinking := req.Thinking
 	if thinking == nil {
 		thinking = o.thinking
+	}
+	if applyOpenAIEffort(o.baseURL, o.vendor, req.Model, thinking, &out) {
+		return out
 	}
 	if thinking != nil && thinking.Type != "" {
 		th := openAIThinking{Type: thinking.Type}

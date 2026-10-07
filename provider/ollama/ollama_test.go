@@ -30,7 +30,7 @@ func TestOllamaThinkMapping(t *testing.T) {
 		{&provider.ThinkingConfig{Type: "bogus"}, nil},
 	}
 	for _, c := range cases {
-		assert.Equal(t, c.want, ollamaThinkValue(c.in), "input %+v", c.in)
+		assert.Equal(t, c.want, ollamaThinkValue("", c.in), "input %+v", c.in)
 	}
 }
 

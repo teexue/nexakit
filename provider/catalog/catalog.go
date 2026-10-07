@@ -338,6 +338,7 @@ func NewProvider(profile Profile) (provider.Provider, error) {
 			AuthStyle:  profile.AuthStyle,
 			ModelsPath: profile.ModelsPath,
 			Vision:     profile.Vision,
+			Vendor:     profile.Name,
 		})
 	case provider.StyleOpenAI:
 		return openai.New(openai.Config{
@@ -346,6 +347,7 @@ func NewProvider(profile Profile) (provider.Provider, error) {
 			Thinking:   profile.Thinking,
 			ModelsPath: profile.ModelsPath,
 			Vision:     profile.Vision,
+			Vendor:     profile.Name,
 		})
 	case provider.StyleOllama:
 		o, err := ollama.New(ollama.Config{

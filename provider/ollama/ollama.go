@@ -160,7 +160,7 @@ func (o *Ollama) buildRequest(req provider.Request) ollamaRequest {
 		Messages: convertOllamaMessages(req.Messages),
 		Tools:    convertOllamaTools(req.Tools),
 		Stream:   true,
-		Think:    ollamaThinkValue(thinking),
+		Think:    ollamaThinkValue(req.Model, thinking),
 	}
 	// Ollama's runtime context window (num_ctx) defaults to 4096, which is
 	// usually far smaller than the effective window the loop assumes. Size

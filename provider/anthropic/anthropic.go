@@ -21,6 +21,8 @@ type Config struct {
 	Client     *http.Client
 	ModelsPath string
 	Vision     bool
+	// Vendor is the catalog profile name, used when the base URL is a proxy.
+	Vendor string
 }
 
 // Anthropic implements Provider using Anthropic Messages API.
@@ -32,6 +34,7 @@ type Anthropic struct {
 	client     *http.Client
 	modelsPath string
 	vision     bool
+	vendor     string
 }
 
 // New creates an Anthropic provider.
@@ -67,6 +70,7 @@ func New(cfg Config) (*Anthropic, error) {
 		client:     client,
 		modelsPath: modelsPath,
 		vision:     cfg.Vision,
+		vendor:     cfg.Vendor,
 	}, nil
 }
 
@@ -122,12 +126,25 @@ func (a *Anthropic) ListModels(ctx context.Context) ([]provider.ModelInfo, error
 }
 
 type anthropicRequest struct {
-	Model     string             `json:"model"`
-	System    string             `json:"system,omitempty"`
-	Messages  []anthropicMessage `json:"messages"`
-	Tools     []anthropicTool    `json:"tools,omitempty"`
-	MaxTokens int                `json:"max_tokens"`
-	Stream    bool               `json:"stream"`
+	Model           string                 `json:"model"`
+	System          string                 `json:"system,omitempty"`
+	Messages        []anthropicMessage     `json:"messages"`
+	Tools           []anthropicTool        `json:"tools,omitempty"`
+	MaxTokens       int                    `json:"max_tokens"`
+	Stream          bool                   `json:"stream"`
+	Thinking        *anthropicThinking     `json:"thinking,omitempty"`
+	OutputConfig    *anthropicOutputConfig `json:"output_config,omitempty"`
+	ReasoningEffort string                 `json:"reasoning_effort,omitempty"`
+}
+
+type anthropicThinking struct {
+	Type         string `json:"type"`
+	BudgetTokens int    `json:"budget_tokens,omitempty"`
+	Keep         string `json:"keep,omitempty"`
+}
+
+type anthropicOutputConfig struct {
+	Effort string `json:"effort,omitempty"`
 }
 
 type anthropicMessage struct {
@@ -221,7 +238,7 @@ func (a *Anthropic) buildRequest(req provider.Request) anthropicRequest {
 		})
 	}
 	maxTokens := provider.EffectiveMaxOutput(req.MaxTokens)
-	return anthropicRequest{
+	out := anthropicRequest{
 		Model:     req.Model,
 		System:    system,
 		Messages:  messages,
@@ -229,6 +246,8 @@ func (a *Anthropic) buildRequest(req provider.Request) anthropicRequest {
 		MaxTokens: maxTokens,
 		Stream:    true,
 	}
+	applyAnthropicEffort(a.baseURL, a.vendor, req.Model, req.Thinking, &out)
+	return out
 }
 
 func buildAssistantMessage(m provider.Message) anthropicMessage {

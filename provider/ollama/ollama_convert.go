@@ -9,7 +9,14 @@ import (
 // ollamaThinkValue maps a ThinkingConfig to the Ollama `think` field.
 // "enabled" -> true, "disabled" -> false, "high"/"medium"/"low"/"max" -> level.
 // nil (no thinking config) omits the field so the model default applies.
-func ollamaThinkValue(th *provider.ThinkingConfig) any {
+func ollamaThinkValue(model string, th *provider.ThinkingConfig) any {
+	if th != nil && th.Effort != "" {
+		wire := provider.MapThink(provider.StyleOllama, "", "", model, th.Effort)
+		if wire.Handled && wire.OllamaSet {
+			return wire.OllamaValue
+		}
+		return nil
+	}
 	if th == nil || th.Type == "" {
 		return nil
 	}

@@ -116,10 +116,14 @@ type Chunk struct {
 	CacheCreationInputTokens int `json:"cache_creation_input_tokens,omitempty"`
 }
 
-// ThinkingConfig controls Kimi-style reasoning mode (OpenAI-compatible extensions).
+// ThinkingConfig controls reasoning for one request.
+// Type and Keep are the legacy on/off switch (Kimi thinking object).
+// Effort is a unified intensity. Empty means leave the vendor default.
+// Providers map Effort onto each vendor's documented field.
 type ThinkingConfig struct {
-	Type string // enabled | disabled
-	Keep string // all (optional, for multi-turn tool loops)
+	Type   string // enabled | disabled
+	Keep   string // all (optional, for multi-turn tool loops)
+	Effort string // off | on | low | medium | high | max
 }
 
 // APIStyle identifies the wire protocol family used to talk to a vendor.
